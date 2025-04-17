@@ -1,0 +1,20 @@
+{
+    "name": "GameDevKit",
+    "rootNamespace": "GameDevKit",
+    "references": [
+        "Unity.TextMeshPro",
+        "UniTask",
+        "NaughtyAttributes.Core",
+        "DOTween.Modules",
+        "PrimeTween.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

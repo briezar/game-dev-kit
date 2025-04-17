@@ -1,0 +1,10 @@
+{
+  "name": "com.viridian.game-dev-kit",
+  "version": "1.0.0",
+  "displayName": "GameDevKit",
+  "description": "A set of common tools used to make games",
+  "unity": "2021.3",
+  "author": {
+    "name": "Viridian"
+  }
+}
