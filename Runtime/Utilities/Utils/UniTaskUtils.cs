@@ -12,6 +12,15 @@ public static class UniTaskUtils
             await UniTask.Yield();
         }
     }
+
+    /// <summary> Waits for a specified duration or indefinitely if the duration is negative. </summary>
+    public static UniTask WaitForSecondsOrIndefinitely(float duration, bool ignoreTimeScale = false, PlayerLoopTiming delayTiming = PlayerLoopTiming.Update, CancellationToken cancellationToken = default, bool cancelImmediately = false)
+    {
+        return duration < 0
+                ? UniTask.Never(cancellationToken)
+                : UniTask.WaitForSeconds(duration, ignoreTimeScale, delayTiming, cancellationToken, cancelImmediately);
+    }
+
     public static CancellationToken GetCancellationTokenOnDisable(this Component component)
     {
         return component.gameObject.GetCancellationTokenOnDisable();

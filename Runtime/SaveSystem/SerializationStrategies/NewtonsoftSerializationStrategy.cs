@@ -12,12 +12,12 @@ namespace GameDevKit.DataPersistence
             _serializerSettings = serializerSettings;
         }
 
-        public override string SerializeObject(object value)
+        public override string Serialize(object value)
         {
             return JsonConvert.SerializeObject(value, _serializerSettings);
         }
 
-        public override T DeserializeObject<T>(string value)
+        public override T Deserialize<T>(string value)
         {
             return JsonConvert.DeserializeObject<T>(value, _serializerSettings);
         }

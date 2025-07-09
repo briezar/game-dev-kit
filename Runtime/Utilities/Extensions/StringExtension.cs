@@ -8,9 +8,14 @@ using System.Globalization;
 
 public static class StringExtension
 {
-    public static bool OrdinalEquals(this string text, string other)
+    public static bool OrdinalEquals(this string text, string other) => string.Equals(text, other, StringComparison.Ordinal);
+
+    /// <summary> Pitfalls are unknown! But it is faster than <see cref="OrdinalEquals"/> </summary>
+    public static bool FastOrdinalEquals(this string text, string other)
     {
-        return string.Equals(text, other, StringComparison.Ordinal);
+        if (text is null && other is null) { return true; }
+        if (text is null || other is null || text.Length != other.Length) { return false; }
+        return string.CompareOrdinal(text, other) == 0;
     }
 
     private static bool IsParsable(ref string text)

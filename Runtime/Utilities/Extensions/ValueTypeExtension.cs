@@ -43,6 +43,7 @@ public static class ValueTypeExtension
     /// <summary> Returns true if a is approximate equal to b within an Epsilon (tolerance) </summary>
     /// <param name="tolerance"> 0.01f is large enough to compare 0.33f and 1f/3 </param>
     public static bool ApproximatelyEquals(this float a, float b, float tolerance = 0.01f) => Mathf.Abs(a - b) < tolerance;
+    public static bool ApproximatelyEquals(this double a, double b, float tolerance = 0.01f) => Math.Abs(a - b) < tolerance;
 
     public static float Round(this float value, int decimalPlace)
     {

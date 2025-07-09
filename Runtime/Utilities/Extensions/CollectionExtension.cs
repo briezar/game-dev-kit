@@ -152,10 +152,8 @@ public static class CollectionExtension
         var count = list.Count;
         for (int i = 0; i < count; i++)
         {
-            var temp = list[i];
-            var randomIndex = Random.Range(i, count);
-            list[i] = list[randomIndex];
-            list[randomIndex] = temp;
+            int randomIndex = Random.Range(i, count);
+            (list[i], list[randomIndex]) = (list[randomIndex], list[i]);
         }
     }
 

@@ -3,6 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
+using System.Threading;
+
+
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,14 +21,18 @@ namespace GameDevKit.DataPersistence
         public readonly SerializationStrategy Serialization;
         public readonly EncryptionStrategy Encryption;
         public readonly SavePathObfuscationStrategy SavePathObfuscation;
+        public readonly WriteStrategy WriteStrategy;
 
-        public SaveSystem(SerializationStrategy serialization) : this(serialization, new NoEncryptionStrategy(), new NoObfuscationStrategy()) { }
+        private readonly string _persistentDataPath;
 
-        public SaveSystem(SerializationStrategy serialization, EncryptionStrategy encryption, SavePathObfuscationStrategy savePathObfuscation)
+        public SaveSystem(SerializationStrategy serialization, EncryptionStrategy encryption = null, SavePathObfuscationStrategy savePathObfuscation = null, WriteStrategy writeStrategy = null)
         {
             Serialization = serialization;
-            Encryption = encryption;
-            SavePathObfuscation = savePathObfuscation;
+            Encryption = encryption ?? new NoEncryptionStrategy();
+            SavePathObfuscation = savePathObfuscation ?? new NoObfuscationStrategy();
+            WriteStrategy = writeStrategy ?? new File_WriteAllTextStrategy();
+
+            _persistentDataPath = Application.persistentDataPath;
         }
 
 
@@ -33,7 +43,7 @@ namespace GameDevKit.DataPersistence
             var dataString = "The quick brown fox jumps over the lazy dog";
 
             var saveSystem1 = new SaveSystem(new JsonUtilitySerializationStrategy());
-            var saveSystem2 = new SaveSystem(new JsonUtilitySerializationStrategy(), new XOR_EncryptionStrategy(), new HexObfuscationStrategy());
+            var saveSystem2 = new SaveSystem(new JsonUtilitySerializationStrategy(), new XOR_EncryptionStrategy(), new HexObfuscationStrategy(), new File_WriteAllTextStrategy());
 
             var test1path = "Test/Test1";
             var test2path = "Test/Test2";
@@ -58,7 +68,7 @@ namespace GameDevKit.DataPersistence
             var path = EditorUtility.OpenFilePanel("Select text file to decipher", Application.persistentDataPath, "");
             if (path.Length != 0)
             {
-                var saveSystem = new SaveSystem(new JsonUtilitySerializationStrategy(), new XOR_EncryptionStrategy(), new HexObfuscationStrategy());
+                var saveSystem = new SaveSystem(new JsonUtilitySerializationStrategy(), new XOR_EncryptionStrategy(), new HexObfuscationStrategy(), new File_WriteAllTextStrategy());
                 var dataString = saveSystem.Encryption.Decrypt(File.ReadAllText(path));
                 var fileName = saveSystem.SavePathObfuscation.Deobfuscate(path.Split(PathUtils.DirectorySeparators).GetLast());
                 Debug.Log($"File name: {fileName}, data:\n{dataString}");
@@ -72,32 +82,27 @@ namespace GameDevKit.DataPersistence
             return File.Exists(obfuscatedPath);
         }
 
-        public void Save(string filePath, string data)
+        public async UniTask<bool> Save(string filePath, string data, CancellationToken cancellationToken = default)
         {
             var savePath = CreateAndGetSavePath(filePath);
 
             try
             {
                 data = Encryption.Encrypt(data);
-                File.WriteAllText(savePath, data);
+                await WriteStrategy.Write(savePath, data, cancellationToken);
+                return true;
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Error while saving to {savePath} (original path: {filePath}).\n{ex}");
+                return false;
             }
         }
 
-        public void Save<T>(string filePath, T obj)
+        public UniTask<bool> Save<T>(string filePath, T obj, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                var dataString = Serialization.SerializeObject(obj);
-                Save(filePath, dataString);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Invalid JSON object: {obj.GetType().Name}.\n{ex}");
-            }
+            var dataString = Serialization.Serialize(obj);
+            return Save(filePath, dataString, cancellationToken);
         }
 
         public string Load(string filePath)
@@ -129,7 +134,7 @@ namespace GameDevKit.DataPersistence
 
             try
             {
-                T result = Serialization.DeserializeObject<T>(dataString);
+                T result = Serialization.Deserialize<T>(dataString);
                 return result;
             }
             catch (Exception ex)
@@ -156,7 +161,7 @@ namespace GameDevKit.DataPersistence
         private string CreateAndGetSavePath(string filePath)
         {
             var obfuscatedPath = SavePathObfuscation.Obfuscate(filePath);
-            obfuscatedPath = Path.Combine(Application.persistentDataPath, obfuscatedPath);
+            obfuscatedPath = Path.Combine(_persistentDataPath, obfuscatedPath);
             Directory.CreateDirectory(Path.GetDirectoryName(obfuscatedPath));
             return obfuscatedPath;
         }

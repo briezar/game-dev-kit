@@ -15,7 +15,7 @@ namespace GameDevKit.Collections
 
         public event Action<AmountOnHold<T>> OnHoldRemoved;
 
-        public AmountOnHold<T> Hold(T item, int amount)
+        public AmountOnHold<T> Hold(T item, long amount)
         {
             if (Pool.TryPop(out var hold))
             {
@@ -51,9 +51,9 @@ namespace GameDevKit.Collections
             }
         }
 
-        public int GetTotalOnHold()
+        public long GetTotalOnHold()
         {
-            var total = 0;
+            long total = 0;
             foreach (var hold in Holds)
             {
                 total += hold.Amount;
@@ -69,13 +69,13 @@ namespace GameDevKit.Collections
         public static readonly AmountOnHold<T> Empty = new(default, 0);
 
         public T Item { get; private set; }
-        public int Amount { get; private set; }
+        public long Amount { get; private set; }
 
         public event Action OnDispose;
         public AmountOnHold() { }
-        public AmountOnHold(T item, int amount) => Init(item, amount);
+        public AmountOnHold(T item, long amount) => Init(item, amount);
 
-        internal void Init(T item, int amount)
+        internal void Init(T item, long amount)
         {
             if (this == Empty)
             {

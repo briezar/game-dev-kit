@@ -18,7 +18,12 @@ namespace GameDevKit.UI
 
         public virtual void Init(int firstPanelIndex = 0)
         {
-            CurrentPanel = _panels[firstPanelIndex];
+            foreach (var panel in _panels)
+            {
+                panel.gameObject.SetActive(false);
+            }
+
+            GoTo(firstPanelIndex, false);
         }
 
         public void GoTo<U>(bool animate = true) where U : T
