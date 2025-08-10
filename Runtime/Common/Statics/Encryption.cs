@@ -5,13 +5,13 @@ using UnityEngine;
 
 public static class Encryption
 {
-    private static readonly string XOR_Key = "Encryption".ToHex().ToHex();
+    public static string XOR_DefaultKey { get; set; } = "Encryption";
 
     // Basic encryption method, much faster than AES and is enough for local data encryption
     public static string XOR(string data, string key = null)
     {
         if (data.IsNullOrEmpty()) { return string.Empty; }
-        key ??= XOR_Key;
+        key ??= XOR_DefaultKey;
 
         var dataLength = data.Length;
         var keyLength = key.Length;

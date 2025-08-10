@@ -12,7 +12,9 @@ namespace GameDevKit.DataPersistence
         public readonly int BufferSize;
         public readonly bool UseAsync;
 
-        public FileStream_WriteTextStrategy(int bufferSize, bool useAsync = true)
+        public const int DefaultBufferSize = 8192; // 8 KB
+
+        public FileStream_WriteTextStrategy(int bufferSize = DefaultBufferSize, bool useAsync = true)
         {
             BufferSize = bufferSize;
             UseAsync = useAsync;
@@ -22,7 +24,7 @@ namespace GameDevKit.DataPersistence
         {
             var bytes = Encoding.UTF8.GetBytes(content);
             using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize, UseAsync);
-            await stream.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
+            await stream.WriteAsync(bytes, cancellationToken);
         }
     }
 }

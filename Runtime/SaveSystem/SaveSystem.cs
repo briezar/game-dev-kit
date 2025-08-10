@@ -4,11 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using System.Threading.Tasks;
 using System.Threading;
-
-
-
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,44 +14,21 @@ namespace GameDevKit.DataPersistence
 {
     public class SaveSystem
     {
-        public readonly SerializationStrategy Serialization;
-        public readonly EncryptionStrategy Encryption;
-        public readonly SavePathObfuscationStrategy SavePathObfuscation;
-        public readonly WriteStrategy WriteStrategy;
+        public SerializationStrategy Serialization { get; init; } = new JsonUtilitySerializationStrategy();
+        public EncryptionStrategy Encryption { get; init; } = new NoEncryptionStrategy();
+        public SavePathObfuscationStrategy SavePathObfuscation { get; init; } = new NoObfuscationStrategy();
+        public WriteStrategy WriteStrategy { get; init; } = new File_WriteAllTextStrategy();
+        public DataProtectionStrategy DataProtection { get; init; } = new DataProtectionStrategy();
 
         private readonly string _persistentDataPath;
 
-        public SaveSystem(SerializationStrategy serialization, EncryptionStrategy encryption = null, SavePathObfuscationStrategy savePathObfuscation = null, WriteStrategy writeStrategy = null)
+        public SaveSystem()
         {
-            Serialization = serialization;
-            Encryption = encryption ?? new NoEncryptionStrategy();
-            SavePathObfuscation = savePathObfuscation ?? new NoObfuscationStrategy();
-            WriteStrategy = writeStrategy ?? new File_WriteAllTextStrategy();
-
             _persistentDataPath = Application.persistentDataPath;
         }
 
 
 #if UNITY_EDITOR
-        [MenuItem("SaveSystem/Test")]
-        private static void Test()
-        {
-            var dataString = "The quick brown fox jumps over the lazy dog";
-
-            var saveSystem1 = new SaveSystem(new JsonUtilitySerializationStrategy());
-            var saveSystem2 = new SaveSystem(new JsonUtilitySerializationStrategy(), new XOR_EncryptionStrategy(), new HexObfuscationStrategy(), new File_WriteAllTextStrategy());
-
-            var test1path = "Test/Test1";
-            var test2path = "Test/Test2";
-
-            saveSystem1.Save(test1path, dataString);
-            Debug.Log($"Test1 path: {test1path}");
-
-            var loadedData = saveSystem1.Load(test1path);
-            saveSystem2.Save(test2path, loadedData);
-            Debug.Log($"Test2 path: {test2path}");
-        }
-
         [MenuItem("SaveSystem/Open Save Path")]
         private static void OpenSavePath()
         {
@@ -68,28 +41,34 @@ namespace GameDevKit.DataPersistence
             var path = EditorUtility.OpenFilePanel("Select text file to decipher", Application.persistentDataPath, "");
             if (path.Length != 0)
             {
-                var saveSystem = new SaveSystem(new JsonUtilitySerializationStrategy(), new XOR_EncryptionStrategy(), new HexObfuscationStrategy(), new File_WriteAllTextStrategy());
-                var dataString = saveSystem.Encryption.Decrypt(File.ReadAllText(path));
+                var saveSystem = new SaveSystem() { Encryption = new XOR_EncryptionStrategy(), SavePathObfuscation = new HexObfuscationStrategy() };
+                var data = saveSystem.Encryption.Decrypt(File.ReadAllText(path));
                 var fileName = saveSystem.SavePathObfuscation.Deobfuscate(path.Split(PathUtils.DirectorySeparators).GetLast());
-                Debug.Log($"File name: {fileName}, data:\n{dataString}");
+                Debug.Log($"File name: {fileName}, data:\n{data}");
             }
         }
 #endif
 
-        public bool HasSave(string filePath)
-        {
-            var obfuscatedPath = CreateAndGetSavePath(filePath);
-            return File.Exists(obfuscatedPath);
-        }
+        public bool HasSave(string filePath) => File.Exists(GetSavePath(filePath, false));
 
-        public async UniTask<bool> Save(string filePath, string data, CancellationToken cancellationToken = default)
+        private async UniTask<bool> InternalSave(string filePath, string data, CancellationToken cancellationToken = default)
         {
-            var savePath = CreateAndGetSavePath(filePath);
+            var savePath = GetSavePath(filePath);
 
             try
             {
                 data = Encryption.Encrypt(data);
-                await WriteStrategy.Write(savePath, data, cancellationToken);
+
+                if (!DataProtection.UseBackup)
+                {
+                    await WriteStrategy.Write(savePath, data, cancellationToken);
+                }
+                else
+                {
+                    await DataProtection.WriteWithBackup(WriteStrategy, savePath, data, cancellationToken);
+                }
+
+
                 return true;
             }
             catch (Exception ex)
@@ -99,71 +78,110 @@ namespace GameDevKit.DataPersistence
             }
         }
 
+        public UniTask<bool> Save(string filePath, string data, CancellationToken cancellationToken = default)
+        {
+            return InternalSave(filePath, data, cancellationToken);
+        }
+
         public UniTask<bool> Save<T>(string filePath, T obj, CancellationToken cancellationToken = default)
         {
-            var dataString = Serialization.Serialize(obj);
-            return Save(filePath, dataString, cancellationToken);
+            var data = Serialization.Serialize(obj);
+            return InternalSave(filePath, data, cancellationToken);
+        }
+
+        private string InternalLoad(string savePath)
+        {
+            string data;
+            try
+            {
+                data = File.ReadAllText(savePath);
+                data = Encryption.Decrypt(data);
+            }
+            catch (FileNotFoundException)
+            {
+                Debug.LogWarning($"No save found at [{savePath}]");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error while trying to load from [{savePath}].\n{ex}");
+                throw;
+            }
+
+            return data;
         }
 
         public string Load(string filePath)
         {
-            var savePath = CreateAndGetSavePath(filePath);
-
-            var dataString = string.Empty;
-            try
-            {
-                dataString = File.ReadAllText(savePath);
-                dataString = Encryption.Decrypt(dataString);
-            }
-            catch (FileNotFoundException)
-            {
-                Debug.LogWarning($"No save found at [{filePath}]");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error while trying to load from [{filePath}].\n{ex}");
-            }
-
-            return dataString;
+            var savePath = GetSavePath(filePath, false);
+            return InternalLoad(savePath);
         }
 
         public T Load<T>(string filePath)
         {
-            var dataString = Load(filePath);
-            if (dataString.IsNullOrEmpty()) { return default; }
+            var savePath = GetSavePath(filePath, false);
+            T result;
 
             try
             {
-                T result = Serialization.Deserialize<T>(dataString);
-                return result;
+                var data = InternalLoad(savePath);
+                result = Serialization.Deserialize<T>(data);
+
+                if (!DataProtection.AllowTampering)
+                {
+                    var isTampered = !DataProtection.IsValidData(savePath, data);
+                    if (isTampered)
+                    {
+                        throw new SaveTamperedException();
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Error while trying to deserialize [{filePath}].\n{ex}");
-                // Debug.LogWarning("Invalid JSON format: " + dataString);
-                return default;
+
+                if (DataProtection.UseBackup)
+                {
+                    var backupPath = DataProtection.GetBackupPath(savePath);
+                    Debug.LogWarning($"Trying to load backup save from [{backupPath}]");
+                    var data = InternalLoad(backupPath);
+                    result = Serialization.Deserialize<T>(data);
+                }
+                else
+                {
+                    result = default;
+                }
             }
+            return result;
         }
 
         public void Delete(string filePath)
         {
-            var savePath = CreateAndGetSavePath(filePath);
+            var savePath = GetSavePath(filePath);
             try
             {
                 File.Delete(savePath);
+                if (DataProtection.UseBackup)
+                {
+                    File.Delete(DataProtection.GetBackupPath(savePath));
+                }
             }
+            catch (DirectoryNotFoundException) { }
             catch (Exception ex)
             {
-                Debug.LogWarning($"Cannot delete save at path {filePath} (original path: {filePath}).\n{ex}");
+                Debug.LogWarning($"Cannot delete save at path {savePath} (original path: {filePath}).\n{ex}");
             }
         }
 
-        private string CreateAndGetSavePath(string filePath)
+        private string GetSavePath(string filePath, bool createDirectory = true)
         {
             var obfuscatedPath = SavePathObfuscation.Obfuscate(filePath);
-            obfuscatedPath = Path.Combine(_persistentDataPath, obfuscatedPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(obfuscatedPath));
-            return obfuscatedPath;
+            var savePath = Path.Combine(_persistentDataPath, obfuscatedPath);
+            if (createDirectory)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+            }
+            return savePath;
         }
     }
 }
