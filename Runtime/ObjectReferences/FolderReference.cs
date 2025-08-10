@@ -86,7 +86,7 @@ namespace GameDevKit.ObjectReferences
             }
 
             // Asset is set with invalid type
-            Debug.LogError($"{_folderAsset.name} is not a folder!");
+            Debug.LogError($"{_folderAsset.name} is invalid!");
 
             // Try recover from path
             _folderAsset = GetFolderAsset();

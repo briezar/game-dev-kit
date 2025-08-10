@@ -17,11 +17,13 @@ namespace GameDevKit.EventSystems
         private OnDragInterceptor _drag;
         private OnEndDragInterceptor _endDrag;
 
+        private readonly HashSet<PointerHandler> _pointerHandlers = new();
+
         private void OnDestroy()
         {
-            foreach (var component in GetComponents<PointerHandler>())
+            foreach (var handler in _pointerHandlers)
             {
-                Destroy(component);
+                Destroy(handler);
             }
         }
 
@@ -72,6 +74,7 @@ namespace GameDevKit.EventSystems
             {
                 backingField = gameObject.GetOrAddComponent<T>();
             }
+            _pointerHandlers.Add(backingField);
             return backingField;
         }
     }

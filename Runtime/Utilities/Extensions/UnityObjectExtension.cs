@@ -256,6 +256,16 @@ public static class ObjectExtension
         }
     }
 
+    public static IEnumerable<Transform> ReverseEnumerateChildren(this Transform parent, Func<Transform, bool> condition = null)
+    {
+        var count = parent.childCount;
+        for (int i = count - 1; i >= 0; i--)
+        {
+            var child = parent.GetChild(i);
+            if (condition == null || condition(child)) { yield return child; }
+        }
+    }
+
     public static int GetChildCount(this Transform parent, Func<Transform, bool> condition)
     {
         return EnumerateChildren(parent, condition).Count();

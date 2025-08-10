@@ -1,11 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(CanvasRenderer))]
-public class UIGraphicsRaycastEmpty : Graphic
+namespace GameDevKit.UI
 {
-    protected override void UpdateGeometry()
+    [RequireComponent(typeof(CanvasRenderer))]
+    public class UIGraphicsRaycastEmpty : Graphic
     {
+        protected override void UpdateGeometry()
+        {
 
+        }
     }
 }

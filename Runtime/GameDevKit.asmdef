@@ -4,9 +4,11 @@
     "references": [
         "Unity.TextMeshPro",
         "UniTask",
+        "UniTask.DOTween",
         "NaughtyAttributes.Core",
         "DOTween.Modules",
-        "PrimeTween.Runtime"
+        "PrimeTween.Runtime",
+        "AYellowpaper.SerializedCollections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

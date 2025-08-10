@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
+using PrimeTween;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using DG.Tweening;
 
 namespace GameDevKit.UI
 {
@@ -112,9 +112,7 @@ namespace GameDevKit.UI
         private void Scale(bool up)
         {
             var scaleTo = _originalScale * (up ? 1 : _scaleDownRatio);
-
-            transform.DOKill();
-            transform.DOScale(scaleTo, _duration).SetUpdate(_useUnscaledTime).SetLink(gameObject);
+            Tween.Scale(transform, scaleTo, _duration, useUnscaledTime: _useUnscaledTime);
         }
     }
 }

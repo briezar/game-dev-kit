@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -136,22 +137,34 @@ namespace GameDevKit.Editor
             return assets.ToArray();
         }
 
-        public static Object[] FindAssets(Type type, params string[] searchInFolders)
-        {
-            var assets = FindAssets($"t:{type.Name}", searchInFolders);
-            return assets.Where(a => a.GetType() == type).ToArray();
-        }
-
-        public static T[] FindAssets<T>(params string[] searchInFolders) where T : Object
-        {
-            var assets = FindAssets($"t:{typeof(T).Name}", searchInFolders);
-            return assets.OfType<T>().ToArray();
-        }
-
+        public static T[] FindAssets<T>(params string[] searchInFolders) where T : Object => FindAssetsWithFilter<T>(null, searchInFolders);
         public static T[] FindAssetsWithFilter<T>(string filter, params string[] searchInFolders) where T : Object
         {
-            var assets = FindAssets($"{filter} t:{typeof(T).Name}", searchInFolders);
-            return assets.OfType<T>().ToArray();
+            var searchType = typeof(T);
+            var isComponent = searchType.Implements<MonoBehaviour>();
+            if (isComponent)
+            {
+                searchType = typeof(GameObject);
+            }
+
+            var assets = FindAssets($"{filter} t:{searchType.Name}", searchInFolders);
+            if (!isComponent)
+            {
+                return assets.OfType<T>().ToArray();
+            }
+
+            var components = assets.OfType<GameObject>()
+                .Select(go =>
+                {
+                    if (go.TryGetComponent<T>(out var component)) { return component; }
+
+                    Debug.LogWarning($"GameObject {go.name} does not have a component of type {typeof(T).Name}. Skipping.", go);
+                    return null;
+                })
+                .Where(c => c != null)
+                .ToArray();
+
+            return components;
         }
     }
 }
