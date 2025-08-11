@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Pool;
 
 public static class LinqExtension
 {
@@ -9,14 +10,15 @@ public static class LinqExtension
     public static IEnumerable<T> Empty<T>(this IEnumerable<T> _) => Enumerable.Empty<T>();
     public static T[] EmptyArray<T>(this IEnumerable<T> _) => Array.Empty<T>();
 
-    public static bool ContainsSameElements<T>(this IEnumerable<T> source, IEnumerable<T> values)
+    /// <summary> Returns the symmetric difference (unique elements) of two sequences. </summary>
+    public static IEnumerable<T> SymmetricExcept<T>(this IEnumerable<T> first, IEnumerable<T> second)
     {
-        return !source.Except(values).Any();
+        return first.Except(second).Union(second.Except(first));
     }
 
     public static bool HasDuplicates<T>(this IEnumerable<T> source)
     {
-        var set = new HashSet<T>();
+        using var _ = HashSetPool<T>.Get(out var set);
         foreach (var item in source)
         {
             if (!set.Add(item))
