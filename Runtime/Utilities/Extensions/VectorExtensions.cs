@@ -1,18 +1,18 @@
 using System;
 using UnityEngine;
 
-[Flags]
-public enum AdjacentDirection
+public static class VectorExtensions
 {
-    None = 0,
-    Up = 1 << 0,
-    Down = 1 << 1,
-    Left = 1 << 2,
-    Right = 1 << 3
-}
+    [Flags]
+    public enum AdjacentDirection
+    {
+        None = 0,
+        Up = 1 << 0,
+        Down = 1 << 1,
+        Left = 1 << 2,
+        Right = 1 << 3
+    }
 
-public static class VectorExtension
-{
     public static int Count(this Vector2Int thisVector)
     {
         return thisVector.x * thisVector.y;

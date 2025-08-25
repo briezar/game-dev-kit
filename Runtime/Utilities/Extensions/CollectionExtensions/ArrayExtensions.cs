@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 
-public static class ArrayExtension
+public static class ArrayExtensions
 {
     public static bool Contains<T>(this T[] array, T element) => Array.Exists(array, (match) => match.Equals(element));
     public static bool TrueForAll<T>(this T[] array, Predicate<T> match) => Array.TrueForAll(array, match);

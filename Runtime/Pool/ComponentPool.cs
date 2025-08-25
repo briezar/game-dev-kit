@@ -6,32 +6,32 @@ using Object = UnityEngine.Object;
 
 namespace GameDevKit.Pool
 {
-    public interface IPoolableObjectEventReceiver
+    public interface IObjectPoolEventReceiver
     {
-        void OnStore();
-        void OnGet();
+        void HandleOnRelease();
+        void HandleOnGet();
     }
 
-    public interface IObjectPool<T> where T : Component
+    public interface IComponentPool<T> where T : Component
     {
         IReadOnlyCollection<T> ActiveElements { get; }
         IReadOnlyCollection<T> InactiveElements { get; }
         Action<T> OnInstantiate { get; set; }
         Action<T> OnGet { get; set; }
-        Action<T> OnStore { get; set; }
+        Action<T> OnRelease { get; set; }
 
         void Prepare(int minCount);
         T Get(bool activate = true);
-        void Store(T element, bool resetTransform = true);
-        void StoreAll(bool resetTransform = true);
+        void Release(T element, bool resetTransform = true);
+        void ReleaseAll(bool resetTransform = true);
         void Clear();
     }
 
-    public class ObjectPool<T> : IObjectPool<T> where T : Component
+    public class ComponentPool<T> : IComponentPool<T> where T : Component
     {
         public Action<T> OnInstantiate { get; set; }
         public Action<T> OnGet { get; set; }
-        public Action<T> OnStore { get; set; }
+        public Action<T> OnRelease { get; set; }
 
         public IReadOnlyCollection<T> ActiveElements => _activeSet;
         public IReadOnlyCollection<T> InactiveElements => _inactiveStack;
@@ -52,24 +52,24 @@ namespace GameDevKit.Pool
                 if (!InstantiateSceneTemplate) { return _template; }
                 if (_sceneTemplate != null) { return _sceneTemplate; }
 
-                _sceneTemplate = _template.IsPrefab() ? Object.Instantiate(_template, _parent) : _template;
+                _sceneTemplate = _template.IsPrefab() ? Object.Instantiate(_template, Container) : _template;
                 _sceneTemplate.gameObject.SetActive(false);
                 return _sceneTemplate;
             }
         }
 
+        public readonly Transform Container;
+
         private readonly T _template;
         private readonly HashSet<T> _activeSet = new();
         private readonly Stack<T> _inactiveStack = new();
-        private readonly Transform _parent;
 
         private T _sceneTemplate;
 
-        public ObjectPool(T template) : this(template, template.transform.parent) { }
-        public ObjectPool(T template, Transform parent)
+        public ComponentPool(T template, Transform container)
         {
             _template = template;
-            _parent = parent;
+            Container = container;
 
             Template.gameObject.SetActive(false);
         }
@@ -79,7 +79,7 @@ namespace GameDevKit.Pool
             var currentCount = _inactiveStack.Count + _activeSet.Count;
             for (int i = 0; i < minCount - currentCount; i++)
             {
-                var element = Object.Instantiate(Template, _parent);
+                var element = Object.Instantiate(Template, Container);
                 element.gameObject.SetActive(false);
                 _inactiveStack.Push(element);
             }
@@ -93,7 +93,7 @@ namespace GameDevKit.Pool
 
             if (element == null)
             {
-                element = Object.Instantiate(Template, _parent);
+                element = Object.Instantiate(Template, Container);
                 OnInstantiate?.Invoke(element);
             }
 
@@ -105,15 +105,15 @@ namespace GameDevKit.Pool
             _activeSet.Add(element);
 
             OnGet?.Invoke(element);
-            if (element is IPoolableObjectEventReceiver receiver)
+            if (element is IObjectPoolEventReceiver receiver)
             {
-                receiver.OnGet();
+                receiver.HandleOnGet();
             }
             return element;
 
         }
 
-        public void Store(T element, bool resetTransform = true)
+        public void Release(T element, bool resetTransform = true)
         {
             if (element == Template) { return; }
             if (element == null)
@@ -124,13 +124,13 @@ namespace GameDevKit.Pool
 
             if (!_activeSet.Remove(element)) { return; }
 
-            InternalStore(element, resetTransform);
+            InternalRelease(element, resetTransform);
         }
 
-        private void InternalStore(T element, bool resetTransform = true)
+        private void InternalRelease(T element, bool resetTransform = true)
         {
             element.gameObject.SetActive(false);
-            element.transform.SetParent(_parent);
+            element.transform.SetParent(Container);
 
             if (resetTransform)
             {
@@ -138,19 +138,19 @@ namespace GameDevKit.Pool
                 element.transform.localScale = Template.transform.localScale;
             }
 
-            OnStore?.Invoke(element);
-            if (element is IPoolableObjectEventReceiver receiver)
+            OnRelease?.Invoke(element);
+            if (element is IObjectPoolEventReceiver receiver)
             {
-                receiver.OnStore();
+                receiver.HandleOnRelease();
             }
             _inactiveStack.Push(element);
         }
 
-        public void StoreAll(bool resetTransform = true)
+        public void ReleaseAll(bool resetTransform = true)
         {
             foreach (var element in _activeSet)
             {
-                InternalStore(element, resetTransform);
+                InternalRelease(element, resetTransform);
             }
 
             _activeSet.Clear();
@@ -174,7 +174,7 @@ namespace GameDevKit.Pool
 
     public static class ObjectPoolExtensions
     {
-        public static T Get<T>(this IObjectPool<T> objectPool, Vector3 position, bool activate = true) where T : Component
+        public static T Get<T>(this IComponentPool<T> objectPool, Vector3 position, bool activate = true) where T : Component
         {
             var element = objectPool.Get(false);
             element.transform.position = position;
@@ -182,7 +182,7 @@ namespace GameDevKit.Pool
             return element;
         }
 
-        public static T Get<T>(this IObjectPool<T> objectPool, Transform parent, bool activate = true) where T : Component
+        public static T Get<T>(this IComponentPool<T> objectPool, Transform parent, bool activate = true) where T : Component
         {
             var element = objectPool.Get(false);
             element.transform.SetParent(parent, false);

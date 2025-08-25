@@ -9,14 +9,11 @@ namespace GameDevKit
     {
         public int min, max;
 
-        public IntRange(int min, int max)
-        {
-            this.min = min;
-            this.max = max;
-        }
-
         public readonly int Diff => max - min;
-        public readonly float AbsDiff => Mathf.Abs(max - min);
+        public readonly float AbsDiff => Mathf.Abs(Diff);
+
+        public IntRange(int min, int max) => (this.min, this.max) = (min, max);
+
         public readonly int GetRandom(bool inclusive = true) => Random.Range(min, inclusive ? max + 1 : max);
     }
 }

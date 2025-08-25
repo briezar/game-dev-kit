@@ -88,6 +88,7 @@ public static class GeneralUtils
         return false;
     }
 
+    /// <summary> Selects a random item from a collection based on their weights. </summary>
     public static T GetWeightedRandom<T>(IEnumerable<T> items, Func<T, float> weightSelector)
     {
         var totalWeight = 0f;

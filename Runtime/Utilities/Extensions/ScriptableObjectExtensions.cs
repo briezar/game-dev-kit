@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class ScriptableObjectExtension
+public static class ScriptableObjectExtensions
 {
     public static void OverwriteDataWith<T>(this T target, T source) where T : ScriptableObject
     {

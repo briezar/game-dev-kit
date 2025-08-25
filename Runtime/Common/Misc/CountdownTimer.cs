@@ -37,13 +37,15 @@ namespace GameDevKit
         public readonly bool IsCompleted => Current <= TimeSpan.Zero;
 
         public ManualCountdownTimer(TimeSpan duration) : this(duration, duration) { }
-        public ManualCountdownTimer(TimeSpan current, TimeSpan duration)
+        public ManualCountdownTimer(TimeSpan duration, TimeSpan current)
         {
             current = current.ClampMax(duration);
 
             Current = current;
             Duration = duration;
         }
+
+        public static ManualCountdownTimer FromSeconds(float seconds) => new(TimeSpan.FromSeconds(seconds));
 
         public bool TickAndCheck(float? interval = null)
         {
@@ -54,7 +56,7 @@ namespace GameDevKit
         public void Tick(float? interval = null)
         {
             if (Current < TimeSpan.Zero) { return; }
-            var intervalTimeSpan = TimeSpan.FromSeconds(interval != null ? interval.Value : Time.deltaTime);
+            var intervalTimeSpan = TimeSpan.FromSeconds(interval ?? Time.deltaTime);
             Current -= intervalTimeSpan;
             Current = Current.ClampMin(TimeSpan.Zero);
         }

@@ -29,13 +29,13 @@ namespace GameDevKit.DataPersistence
 
 
 #if UNITY_EDITOR
-        [MenuItem("SaveSystem/Open Save Path")]
+        [MenuItem(EditorConstants.MenuItemPath + "SaveSystem/Open Save Path")]
         private static void OpenSavePath()
         {
             EditorUtility.OpenWithDefaultApp(Application.persistentDataPath);
         }
 
-        [MenuItem("SaveSystem/Decipher")]
+        [MenuItem(EditorConstants.MenuItemPath + "SaveSystem/Decipher")]
         private static void Decipher()
         {
             var path = EditorUtility.OpenFilePanel("Select text file to decipher", Application.persistentDataPath, "");
@@ -43,7 +43,7 @@ namespace GameDevKit.DataPersistence
             {
                 var saveSystem = new SaveSystem() { Encryption = new XOR_EncryptionStrategy(), SavePathObfuscation = new HexObfuscationStrategy() };
                 var data = saveSystem.Encryption.Decrypt(File.ReadAllText(path));
-                var fileName = saveSystem.SavePathObfuscation.Deobfuscate(path.Split(PathUtils.DirectorySeparators).GetLast());
+                var fileName = saveSystem.SavePathObfuscation.Deobfuscate(path.Split(PathUtils.DirectorySeparators)[^1]);
                 Debug.Log($"File name: {fileName}, data:\n{data}");
             }
         }

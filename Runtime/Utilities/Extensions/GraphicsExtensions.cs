@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public static class GraphicsExtension
+public static class GraphicsExtensions
 {
     public static void SetOnClick(this Button button, Action action, bool removeInspectorEvents = false)
     {

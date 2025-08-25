@@ -8,7 +8,7 @@ namespace GameDevKit
     public interface IComponentCache
     {
         void Cache(Component component);
-        T Get<T>(int index = 0);
+        T Get<T>(int index = 0) where T : Component;
         void ClearCache();
     }
 
@@ -24,20 +24,28 @@ namespace GameDevKit
             _components.Add(component);
         }
 
-        public T Get<T>(int index = 0)
+        public T Get<T>(int index = 0) where T : Component
         {
             var componentIndex = 0;
+            (int index, T component) fallback = (0, null);
             foreach (var component in _components)
             {
-                if (component is not T targetComponent) { continue; }
-
-                if (componentIndex != index)
+                if (component is T targetComponent)
                 {
-                    componentIndex++;
-                    continue;
+                    fallback = (componentIndex, targetComponent);
+                    if (componentIndex != index)
+                    {
+                        componentIndex++;
+                        continue;
+                    }
+                    return targetComponent;
                 }
-                return targetComponent;
+            }
 
+            if (fallback.component != null)
+            {
+                Debug.LogWarning($"Cannot find component {typeof(T).Name} at index {index}. Fallback to index {fallback.index}!", fallback.component);
+                return fallback.component;
             }
 
             Debug.LogWarning($"Cannot find component {typeof(T).Name}!");
@@ -50,7 +58,7 @@ namespace GameDevKit
         }
     }
 
-    public class ComponentCacheBehaviour : MonoBehaviour, IComponentCache
+    public class ComponentCacheObject : MonoBehaviour, IComponentCache
     {
         [Tooltip("Toggle this to debug which component was cached")]
         [SerializeField] private bool _debug;
@@ -58,32 +66,31 @@ namespace GameDevKit
         [Tooltip("Be careful of assigning the wrong component!")]
         [SerializeField] private Component[] _cachedComponents;
 
-        private ComponentCache _cacher;
-
-        private ComponentCache cacher
+        private ComponentCache _internalCache;
+        private ComponentCache _cache
         {
             get
             {
-                if (_cacher == null)
+                if (_internalCache == null)
                 {
-                    _cacher = new();
+                    _internalCache = new();
                     foreach (var component in _cachedComponents)
                     {
-                        _cacher.Cache(component);
+                        _internalCache.Cache(component);
                         if (_debug)
                         {
-                            Debug.Log($"Cached {component}");
+                            Debug.Log($"Cached {component}", component);
                         }
                     }
                     _cachedComponents = null;
 
                 }
-                return _cacher;
+                return _internalCache;
             }
         }
 
-        public void Cache(Component component) => cacher.Cache(component);
-        public T Get<T>(int index = 0) => cacher.Get<T>(index);
-        public void ClearCache() => cacher.ClearCache();
+        public void Cache(Component component) => _cache.Cache(component);
+        public T Get<T>(int index = 0) where T : Component => _cache.Get<T>(index);
+        public void ClearCache() => _cache.ClearCache();
     }
 }

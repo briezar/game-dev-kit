@@ -11,7 +11,9 @@ namespace GameDevKit.Editor
 {
     public static class ProjectSetup
     {
-        [MenuItem("Tools/Project Setup/Install Essential Packages")]
+        private const string MenuItemPath = EditorConstants.MenuItemPath + "Project Setup/";
+
+        [MenuItem(MenuItemPath + "Install Essential Packages")]
         public static void InstallEssentialPackages()
         {
             PackagesHelper.InstallPackages(
@@ -23,7 +25,7 @@ namespace GameDevKit.Editor
             );
         }
 
-        [MenuItem("Tools/Project Setup/Create Folder Structure")]
+        [MenuItem(MenuItemPath + "Create Folder Structure")]
         public static void CreateFolderStructure()
         {
             AssetsDirectory.CreateFolder("_Project", new[] { "Art", "Audio", "Prefabs", "Presets", "Scripts" });
@@ -41,7 +43,7 @@ namespace GameDevKit.Editor
             // EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload | EnterPlayModeOptions.DisableSceneReload;
         }
 
-        [MenuItem("Tools/Project Setup/Add Compiler Suppressions")]
+        [MenuItem(MenuItemPath + "Add Compiler Suppressions")]
         public static void AddCompilerSuppressions()
         {
             var argumentMap = new Dictionary<string, string>()

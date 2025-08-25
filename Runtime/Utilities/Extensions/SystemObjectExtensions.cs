@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-public static class SystemObjectExtension
+public static class SystemObjectExtensions
 {
     public static string GetObjectInfo(this object obj, string separator = ", ")
     {

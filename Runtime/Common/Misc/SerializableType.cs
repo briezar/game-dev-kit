@@ -23,6 +23,11 @@ namespace GameDevKit
 
             return FilterType == null || type.Implements(FilterType);
         }
+
+        public string GetFilterInfo()
+        {
+            return $"Valid types: {(FilterType != null ? FilterType : "Any")}, AllowAbstract: {AllowAbstract}, AllowInterface: {AllowInterface}, AllowGeneric: {AllowGeneric}";
+        }
     }
 
     [Serializable]

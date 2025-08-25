@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using System.Globalization;
 
-public static class StringExtension
+public static class StringExtensions
 {
     public static bool OrdinalEquals(this string text, string other) => string.Equals(text, other, StringComparison.Ordinal);
 

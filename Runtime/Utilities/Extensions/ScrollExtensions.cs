@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public static class ScrollExtension
+public static class ScrollExtensions
 {
     /// <summary> Get the normalized position where the element would be focused in the viewport </summary>
     /// <param name="focusValue">Ranges from 0 to 1 with 0 being leftmost, 1 being rightmost</param>

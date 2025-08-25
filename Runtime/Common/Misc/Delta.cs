@@ -32,15 +32,4 @@ namespace GameDevKit
         }
     }
 
-    [Serializable]
-    public struct Delta<T>
-    {
-        public T previous, current;
-
-        public Delta(T previous, T current)
-        {
-            this.previous = previous;
-            this.current = current;
-        }
-    }
 }

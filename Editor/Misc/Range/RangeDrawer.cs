@@ -4,7 +4,9 @@ using UnityEditor;
 namespace GameDevKit.Editor
 {
     [CustomPropertyDrawer(typeof(IntRange))]
-    public class IntRangeDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(FloatRange))]
+    [CustomPropertyDrawer(typeof(DoubleRange))]
+    public class RangeDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -16,8 +18,8 @@ namespace GameDevKit.Editor
             position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
 
             // Calculate rects
-            Rect minRect = new Rect(position.x, position.y, position.width / 2 - 8, position.height);
-            Rect maxRect = new Rect(minRect.xMax + 8, position.y, position.width / 2, position.height);
+            var minRect = new Rect(position.x, position.y, position.width / 2 - 8, position.height);
+            var maxRect = new Rect(minRect.xMax + 8, position.y, position.width / 2, position.height);
 
             EditorGUIUtility.labelWidth = 40;
             EditorGUI.PropertyField(minRect, property.FindPropertyRelative("min"));

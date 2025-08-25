@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 public static class ReflectionExtensions
@@ -20,8 +21,10 @@ public static class ReflectionExtensions
         return source.GetType().IsDefined(typeof(TAttribute), inherit);
     }
 
-    public static bool HasAttribute<TAttribute>(this ValueType source, bool inherit = true) where TAttribute : Attribute
+    public static bool TryGetAttribute<TAttribute>(this object source, out TAttribute attribute, bool inherit = true) where TAttribute : Attribute
     {
-        return source.GetType().IsDefined(typeof(TAttribute), inherit);
+        attribute = source.GetType().GetCustomAttribute<TAttribute>(inherit);
+        return attribute != null;
     }
+
 }

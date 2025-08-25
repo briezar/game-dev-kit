@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public static class DateTimeExtension
+public static class DateTimeExtensions
 {
     public static long ToUnixTimeSeconds(this DateTime date)
     {

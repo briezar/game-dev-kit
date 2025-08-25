@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace GameDevKit
@@ -9,14 +8,18 @@ namespace GameDevKit
     {
         public double min, max;
 
-        public DoubleRange(double min, double max)
-        {
-            this.min = min;
-            this.max = max;
-        }
-
         public readonly double Diff => max - min;
-        public readonly double AbsDiff => Math.Abs(max - min);
-        public readonly double GetRandom() => min + Random.value * Diff;
+        public readonly double AbsDiff => Math.Abs(Diff);
+
+        public DoubleRange(double min, double max) => (this.min, this.max) = (min, max);
+
+        public readonly double GetRandom()
+        {
+            if (min == max) { return min; }
+            var low = Math.Min(min, max);
+            var high = Math.Max(min, max);
+
+            return low + (double)Random.value * (high - low) + double.Epsilon; // ensures 'high' can be reached
+        }
     }
 }

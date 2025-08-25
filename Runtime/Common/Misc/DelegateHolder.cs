@@ -22,5 +22,21 @@ namespace GameDevKit
             }
         }
 
+        public TDelegate Set(TSource source, TDelegate del)
+        {
+            _delegates[source] = del;
+            return del;
+        }
+
+        public TDelegate Unset(TSource source)
+        {
+            if (_delegates.TryGetValue(source, out var del))
+            {
+                _delegates.Remove(source);
+                return del;
+            }
+            return null;
+        }
+
     }
 }

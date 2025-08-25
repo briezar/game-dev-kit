@@ -6,13 +6,14 @@ using UnityEngine.Events;
 
 namespace GameDevKit.Pool
 {
-    public class PoolableObject : MonoBehaviour, IPoolableObjectEventReceiver
+    public class PoolableObject : MonoBehaviour, IObjectPoolEventReceiver
     {
         [field: SerializeField] public ComponentCache ComponentCache { get; private set; }
 
-        public UnityEvent OnGetEvent, OnStoreEvent;
+        [field: SerializeField] public UnityEvent OnGet { get; private set; }
+        [field: SerializeField] public UnityEvent OnRelease { get; private set; }
 
-        public void OnGet() => OnGetEvent?.Invoke();
-        public void OnStore() => OnStoreEvent?.Invoke();
+        public void HandleOnGet() => OnGet?.Invoke();
+        public void HandleOnRelease() => OnRelease?.Invoke();
     }
 }

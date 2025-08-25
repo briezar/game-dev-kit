@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public static class ValueTypeExtension
+public static class ValueTypeExtensions
 {
     public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T>
     {

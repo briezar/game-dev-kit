@@ -8,9 +8,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace SpecializedExtension
+namespace SpecializedExtensions
 {
-    public static class SpecializedObjectExtension
+    public static class UnityObjectExtensions
     {
         public static void OverrideSortingLayer(this GameObject gameObject, bool allowClick = false, string layer = "", int sortingOrder = 0)
         {
@@ -134,7 +134,7 @@ namespace SpecializedExtension
     }
 }
 
-public static class ObjectExtension
+public static class UnityObjectExtensions
 {
     public static T OrNull<T>(this T obj) where T : Object => obj ? obj : null;
 

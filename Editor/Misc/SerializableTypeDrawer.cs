@@ -30,7 +30,7 @@ namespace GameDevKit.Editor
             {
                 if (_isFirstUpdate)
                 {
-                    Debug.LogWarning($"Type '{selectedType.Name}' is not a valid type for {fieldInfo.Name} based on {nameof(TypeFilterAttribute)}.", property.serializedObject.targetObject);
+                    Debug.LogWarning($"Type '{selectedType.Name}' is not a valid type based on {nameof(TypeFilterAttribute)}\n{_typeFilter.GetFilterInfo()}", property.serializedObject.targetObject);
                 }
 
                 btnStyle.normal.textColor = Color.yellowNice;

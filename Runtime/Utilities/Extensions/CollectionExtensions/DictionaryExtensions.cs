@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public static class DictionaryExtension
+public static class DictionaryExtensions
 {
     public static bool ContainsKey<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable, TKey key)
     {

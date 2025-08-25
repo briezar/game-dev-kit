@@ -8,7 +8,7 @@ namespace GameDevKit.UI
 {
     public enum TransitionDirection { None, LeftToRight, RightToLeft }
 
-    public abstract class CommonPanel<T> : AdvancedBehaviour where T : CommonPanel<T>
+    public abstract class CommonPanel<T> : ImprovedBehaviour where T : CommonPanel<T>
     {
         private UIAnim _cacheUiAnim;
         public UIAnim Anim => _cacheUiAnim ??= this.GetOrAddComponent<UIAnim>();
