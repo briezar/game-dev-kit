@@ -18,7 +18,7 @@ namespace GameDevKit.Editor
         {
             PackagesHelper.InstallPackages(
                 "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-                "https://github.com/dbrizov/NaughtyAttributes.git#upm",
+                "https://github.com/v0lt13/EditorAttributes.git",
                 "https://github.com/yasirkula/UnityAssetUsageDetector.git",
                 "https://github.com/yasirkula/UnityIngameDebugConsole.git",
                 "com.unity.nuget.newtonsoft-json"

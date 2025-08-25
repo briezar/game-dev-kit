@@ -4,11 +4,9 @@
     "references": [
         "Unity.TextMeshPro",
         "UniTask",
-        "UniTask.DOTween",
-        "NaughtyAttributes.Core",
-        "DOTween.Modules",
         "PrimeTween.Runtime",
-        "AYellowpaper.SerializedCollections"
+        "AYellowpaper.SerializedCollections",
+        "EditorAttributes"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
