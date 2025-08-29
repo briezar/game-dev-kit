@@ -20,6 +20,11 @@ namespace GameDevKit.UI
         {
             foreach (var panel in _panels)
             {
+                panel.gameObject.SetActive(true);
+                if (!panel.gameObject.activeInHierarchy)
+                {
+                    Debug.LogWarning($"Panel {panel.name} is not active in hierarchy on init!", panel);
+                }
                 panel.gameObject.SetActive(false);
             }
 

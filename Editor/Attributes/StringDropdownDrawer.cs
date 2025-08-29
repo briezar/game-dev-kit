@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using GameDevKit.Attributes;
 using UnityEditor;
 using UnityEngine;
 
-namespace GameDevKit.Attributes.Editor
+namespace GameDevKit.Editor.Attributes
 {
     [CustomPropertyDrawer(typeof(StringDropdownAttribute))]
     public class StringDropdownDrawer : PropertyDrawer

@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEditor;
+using GameDevKit.Attributes;
 
-namespace GameDevKit.Attributes.Editor
+namespace GameDevKit.Editor.Attributes
 {
     [CustomPropertyDrawer(typeof(PrefabOnlyAttribute))]
     public class PrefabOnlyDrawer : PropertyDrawer

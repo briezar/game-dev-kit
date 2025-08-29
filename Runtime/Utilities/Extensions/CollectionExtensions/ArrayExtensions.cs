@@ -24,9 +24,6 @@ public static class ArrayExtensions
 
     public static int IndexOf<T>(this T[] array, T value, int startIndex, int count) => Array.IndexOf(array, value, startIndex, count);
     public static int IndexOf<T>(this T[] array, T value, int startIndex) => Array.IndexOf(array, value, startIndex);
-    public static int IndexOf(this Array array, object value) => Array.IndexOf(array, value);
-    public static int IndexOf(this Array array, object value, int startIndex, int count) => Array.IndexOf(array, value, startIndex, count);
-    public static int IndexOf(this Array array, object value, int startIndex) => Array.IndexOf(array, value, startIndex);
     public static int IndexOf<T>(this T[] array, T value) => Array.IndexOf(array, value);
 
     public static ReadOnlyCollection<T> AsReadOnly<T>(this T[] array) => Array.AsReadOnly(array);

@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEditor;
+using GameDevKit.ObjectReferences;
 
-namespace GameDevKit.ObjectReferences.Editor
+namespace GameDevKit.Editor.ObjectReferences
 {
     public abstract class SingleLineObjectReferenceDrawer : PropertyDrawer
     {

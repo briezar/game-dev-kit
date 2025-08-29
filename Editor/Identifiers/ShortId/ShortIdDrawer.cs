@@ -1,8 +1,9 @@
 using System;
+using GameDevKit.Identifiers;
 using UnityEditor;
 using UnityEngine;
 
-namespace GameDevKit.Identifiers.Editor
+namespace GameDevKit.Editor.Identifiers
 {
     [CustomPropertyDrawer(typeof(ShortId))]
     public class ShortIdDrawer : PropertyDrawer

@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
-using System.Text;
+using GameDevKit.Identifiers;
 using UnityEditor;
 using UnityEngine;
 
-namespace GameDevKit.Identifiers
+namespace GameDevKit.Editor.Identifiers
 {
     [CustomPropertyDrawer(typeof(UniGuid))]
     public class UniGuidDrawer : PropertyDrawer

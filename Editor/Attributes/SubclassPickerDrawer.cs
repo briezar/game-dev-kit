@@ -2,8 +2,9 @@ using System;
 using UnityEngine;
 using UnityEditor;
 using System.Runtime.CompilerServices;
+using GameDevKit.Attributes;
 
-namespace GameDevKit.Attributes.Editor
+namespace GameDevKit.Editor.Attributes
 {
     [CustomPropertyDrawer(typeof(SubclassPickerAttribute))]
     public class SubclassPickerDrawer : PropertyDrawer
