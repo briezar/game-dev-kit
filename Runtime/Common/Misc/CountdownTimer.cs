@@ -11,7 +11,7 @@ namespace GameDevKit
 
         private float _cooldownTimestamp;
 
-        public AutoCountdownTimer(TimeSpan duration) : this(duration, duration) { }
+        public AutoCountdownTimer(TimeSpan duration) : this(duration, TimeSpan.Zero) { }
         public AutoCountdownTimer(TimeSpan currentDuration, TimeSpan duration)
         {
             currentDuration = currentDuration.Clamp(TimeSpan.Zero, duration);
@@ -19,15 +19,10 @@ namespace GameDevKit
             Duration = duration;
         }
 
-        public void Restart()
-        {
-            _cooldownTimestamp = Time.time + (float)Duration.TotalSeconds;
-        }
+        public static AutoCountdownTimer FromSeconds(float seconds) => new(TimeSpan.FromSeconds(seconds));
 
-        public void Complete()
-        {
-            _cooldownTimestamp = Time.time;
-        }
+        public void Complete() => _cooldownTimestamp = Time.time;
+        public void Restart() => _cooldownTimestamp = Time.time + (float)Duration.TotalSeconds;
     }
 
     public struct ManualCountdownTimer
@@ -36,18 +31,21 @@ namespace GameDevKit
         public TimeSpan Duration { get; private set; }
         public readonly bool IsCompleted => Current <= TimeSpan.Zero;
 
-        public ManualCountdownTimer(TimeSpan duration) : this(duration, duration) { }
+        public bool CanTick { get; set; }
+
+        public ManualCountdownTimer(TimeSpan duration) : this(duration, TimeSpan.Zero) { }
         public ManualCountdownTimer(TimeSpan duration, TimeSpan current)
         {
             current = current.ClampMax(duration);
 
             Current = current;
             Duration = duration;
+            CanTick = true;
         }
 
         public static ManualCountdownTimer FromSeconds(float seconds) => new(TimeSpan.FromSeconds(seconds));
 
-        public bool TickAndCheck(float? interval = null)
+        public bool TickAndCheckCompletion(float? interval = null)
         {
             Tick(interval);
             return IsCompleted;
@@ -55,15 +53,14 @@ namespace GameDevKit
 
         public void Tick(float? interval = null)
         {
+            if (!CanTick) { return; }
             if (Current < TimeSpan.Zero) { return; }
             var intervalTimeSpan = TimeSpan.FromSeconds(interval ?? Time.deltaTime);
             Current -= intervalTimeSpan;
             Current = Current.ClampMin(TimeSpan.Zero);
         }
 
-        public void Restart()
-        {
-            Current = Duration;
-        }
+        public void Complete() => Current = TimeSpan.Zero;
+        public void Restart() => Current = Duration;
     }
 }

@@ -66,12 +66,40 @@ namespace GameDevKit.Pool
 
         private T _sceneTemplate;
 
+        private readonly HashSet<T> _pendingUpdateSet = new();
+        private Action<T> _updateTemplateAction;
+
         public ComponentPool(T template, Transform container)
         {
             _template = template;
             Container = container;
 
             Template.gameObject.SetActive(false);
+        }
+
+        public void UpdateTemplate(Action<T> updateAction, bool updateActive = false)
+        {
+            _updateTemplateAction = updateAction;
+
+            updateAction?.Invoke(Template);
+
+            foreach (var element in _inactiveStack)
+            {
+                updateAction?.Invoke(element);
+            }
+
+            if (updateActive)
+            {
+                foreach (var element in _activeSet)
+                {
+                    updateAction?.Invoke(element);
+                }
+            }
+            else
+            {
+                _pendingUpdateSet.Clear();
+                _pendingUpdateSet.UnionWith(_activeSet);
+            }
         }
 
         public void Prepare(int minCount)
@@ -143,6 +171,11 @@ namespace GameDevKit.Pool
             {
                 receiver.HandleOnRelease();
             }
+
+            if (_pendingUpdateSet.Remove(element))
+            {
+                _updateTemplateAction?.Invoke(element);
+            }
             _inactiveStack.Push(element);
         }
 
@@ -158,17 +191,26 @@ namespace GameDevKit.Pool
 
         public void Clear()
         {
-            foreach (var element in _inactiveStack)
-            {
-                Object.Destroy(element.gameObject);
-            }
+            ClearActive();
+            ClearInactive();
+        }
+
+        public void ClearActive()
+        {
             foreach (var element in _activeSet)
             {
                 Object.Destroy(element.gameObject);
             }
-
-            _inactiveStack.Clear();
             _activeSet.Clear();
+        }
+
+        public void ClearInactive()
+        {
+            foreach (var element in _inactiveStack)
+            {
+                Object.Destroy(element.gameObject);
+            }
+            _inactiveStack.Clear();
         }
     }
 

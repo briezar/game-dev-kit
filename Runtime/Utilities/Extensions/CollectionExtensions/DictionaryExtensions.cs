@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Pool;
 
 public static class DictionaryExtensions
 {
@@ -54,6 +55,24 @@ public static class DictionaryExtensions
                 value = default;
                 return false;
         }
+    }
+
+    public static int RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, Func<KeyValuePair<TKey, TValue>, bool> predicate)
+    {
+        using var _ = ListPool<TKey>.Get(out var keysToRemove);
+        foreach (var pair in dictionary)
+        {
+            if (predicate == null || predicate(pair))
+            {
+                keysToRemove.Add(pair.Key);
+            }
+        }
+
+        foreach (var key in keysToRemove)
+        {
+            dictionary.Remove(key);
+        }
+        return keysToRemove.Count;
     }
 
 }
