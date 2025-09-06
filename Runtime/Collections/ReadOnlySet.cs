@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,13 +18,16 @@ namespace GameDevKit.Collections
 
     public class ReadOnlyHashSet<T> : ReadOnlySet<T>
     {
+        public ReadOnlyHashSet(IEnumerable<T> values) : this(new HashSet<T>(values)) { }
+        public ReadOnlyHashSet(params T[] values) : this(new HashSet<T>(values)) { }
         public ReadOnlyHashSet(HashSet<T> set) : base(set) { }
-        public ReadOnlyHashSet(params T[] values) : base(new HashSet<T>(values)) { }
+
+        public HashSet<T>.Enumerator GetEnumerator() => ((HashSet<T>)_set).GetEnumerator();
     }
 
     public class ReadOnlySet<T> : IReadOnlySet<T>, ISet<T>
     {
-        private readonly ISet<T> _set;
+        protected readonly ISet<T> _set;
 
         public int Count => _set.Count;
         bool ICollection<T>.IsReadOnly => true;
@@ -43,7 +45,8 @@ namespace GameDevKit.Collections
         public bool Overlaps(IEnumerable<T> other) => _set.Overlaps(other);
         public bool SetEquals(IEnumerable<T> other) => _set.SetEquals(other);
         public void CopyTo(T[] array, int arrayIndex) => _set.CopyTo(array, arrayIndex);
-        public IEnumerator<T> GetEnumerator() => _set.GetEnumerator();
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _set.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _set.GetEnumerator();
 
         bool ISet<T>.Add(T item) => throw new NotSupportedException();

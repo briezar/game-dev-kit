@@ -15,11 +15,13 @@ public static class JsonExtensions
         return JsonConvert.DeserializeObject(obj.ToString(), type);
     }
 
-    public static string ToJsonNewtonsoft(this object obj, Formatting formatting = Formatting.Indented)
+    public static string ToJson(this object obj, Formatting formatting = Formatting.None)
     {
         if (obj == null) { return string.Empty; }
         return JsonConvert.SerializeObject(obj, formatting);
     }
+
+    public static string ToPrettyJson(this object obj) => ToJson(obj, Formatting.Indented);
 
     public static string ToJsonUnity(this object obj, bool prettyPrint = true)
     {

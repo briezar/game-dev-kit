@@ -33,7 +33,13 @@ namespace GameDevKit
 
         public bool CanTick { get; set; }
 
-        public ManualCountdownTimer(TimeSpan duration) : this(duration, TimeSpan.Zero) { }
+        /// <summary> Initializes a new timer with current duration set to 0 or full duration based on <paramref name="isCompleted"/> </summary>
+        public ManualCountdownTimer(TimeSpan duration, bool isCompleted = true) : this(duration, isCompleted ? TimeSpan.Zero : duration) { }
+
+        /// <summary> Initializes a new timer with <paramref name="duration"/> and current duration set to a lerp between 0 and full duration based on <paramref name="t"/> </summary>
+        public ManualCountdownTimer(TimeSpan duration, float t) : this(duration, TimeSpan.FromSeconds(Mathf.Lerp(0, (float)duration.TotalSeconds, t))) { }
+
+        /// <summary> Initializes a new timer with <paramref name="duration"/> and <paramref name="current"/> duration </summary>
         public ManualCountdownTimer(TimeSpan duration, TimeSpan current)
         {
             current = current.ClampMax(duration);
@@ -43,7 +49,7 @@ namespace GameDevKit
             CanTick = true;
         }
 
-        public static ManualCountdownTimer FromSeconds(float seconds) => new(TimeSpan.FromSeconds(seconds));
+        public static ManualCountdownTimer FromSeconds(float seconds, float t = 0) => new(TimeSpan.FromSeconds(seconds), t);
 
         public bool TickAndCheckCompletion(float? interval = null)
         {

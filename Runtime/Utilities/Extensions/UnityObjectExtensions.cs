@@ -138,6 +138,8 @@ public static class UnityObjectExtensions
 {
     public static T OrNull<T>(this T obj) where T : Object => obj ? obj : null;
 
+    public static bool IsDestroyedOrDisabled(this MonoBehaviour behaviour) => behaviour == null || !behaviour.isActiveAndEnabled;
+
     public static bool IsPrefab(this Component component) => IsPrefab(component.gameObject);
     public static bool IsPrefab(this GameObject obj)
     {

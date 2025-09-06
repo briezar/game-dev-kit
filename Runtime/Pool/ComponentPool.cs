@@ -66,9 +66,6 @@ namespace GameDevKit.Pool
 
         private T _sceneTemplate;
 
-        private readonly HashSet<T> _pendingUpdateSet = new();
-        private Action<T> _updateTemplateAction;
-
         public ComponentPool(T template, Transform container)
         {
             _template = template;
@@ -77,10 +74,15 @@ namespace GameDevKit.Pool
             Template.gameObject.SetActive(false);
         }
 
+        private readonly Dictionary<T, Action<T>> _pendingUpdates = new();
+
+        /// <summary>
+        /// Updates the template.<br/>
+        /// If <paramref name="updateActive"/> is true, also updates all active elements, otherwise queues the update to be applied on release.<br/>
+        /// Inactive elements are always updated.
+        /// </summary>
         public void UpdateTemplate(Action<T> updateAction, bool updateActive = false)
         {
-            _updateTemplateAction = updateAction;
-
             updateAction?.Invoke(Template);
 
             foreach (var element in _inactiveStack)
@@ -88,17 +90,17 @@ namespace GameDevKit.Pool
                 updateAction?.Invoke(element);
             }
 
-            if (updateActive)
+            foreach (var element in _activeSet)
             {
-                foreach (var element in _activeSet)
+                if (updateActive)
                 {
                     updateAction?.Invoke(element);
                 }
-            }
-            else
-            {
-                _pendingUpdateSet.Clear();
-                _pendingUpdateSet.UnionWith(_activeSet);
+                else
+                {
+                    _pendingUpdates.TryAdd(element, null);
+                    _pendingUpdates[element] += updateAction;
+                }
             }
         }
 
@@ -107,10 +109,17 @@ namespace GameDevKit.Pool
             var currentCount = _inactiveStack.Count + _activeSet.Count;
             for (int i = 0; i < minCount - currentCount; i++)
             {
-                var element = Object.Instantiate(Template, Container);
+                var element = InstantiateElement();
                 element.gameObject.SetActive(false);
                 _inactiveStack.Push(element);
             }
+        }
+
+        private T InstantiateElement()
+        {
+            var element = Object.Instantiate(Template, Container);
+            OnInstantiate?.Invoke(element);
+            return element;
         }
 
         public T Get(bool activate = true)
@@ -121,8 +130,7 @@ namespace GameDevKit.Pool
 
             if (element == null)
             {
-                element = Object.Instantiate(Template, Container);
-                OnInstantiate?.Invoke(element);
+                element = InstantiateElement();
             }
 
             if (activate)
@@ -172,10 +180,11 @@ namespace GameDevKit.Pool
                 receiver.HandleOnRelease();
             }
 
-            if (_pendingUpdateSet.Remove(element))
+            if (_pendingUpdates.Remove(element, out var updateAction))
             {
-                _updateTemplateAction?.Invoke(element);
+                updateAction?.Invoke(element);
             }
+
             _inactiveStack.Push(element);
         }
 

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using GameDevKit.Attributes;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace GameDevKit.Editor.Attributes
 {
@@ -116,6 +117,10 @@ namespace GameDevKit.Editor.Attributes
 
             private static readonly GUIContent kPasteReplaceContent = new("Paste (Replace)");
             private static readonly GUIContent kPasteOverwriteContent = new("Paste (Overwrite)");
+            private static readonly GUIContent kDuplicateDeepCopyContent = new("Duplicate (Deep Copy)");
+
+            // captures index and whether there is a trailing dot (nested)
+            private static readonly Regex s_arrayIndexRegex = new(@"\.Array\.data\[(\d+)\](?:$|(\.))", RegexOptions.Compiled);
 
             [InitializeOnLoadMethod]
             private static void Initialize()
@@ -125,11 +130,9 @@ namespace GameDevKit.Editor.Attributes
 
             private static void OnContextualPropertyMenu(GenericMenu menu, SerializedProperty property)
             {
-                if (property.propertyType != SerializedPropertyType.ManagedReference)
-                    return;
+                if (property.propertyType != SerializedPropertyType.ManagedReference) { return; }
 
                 var clonedProperty = property.Copy();
-
                 menu.AddItem(new GUIContent($"Copy \"{property.propertyPath}\" property"), false, Copy, clonedProperty);
 
                 string copiedPropertyPath = SessionState.GetString(kCopiedPropertyPathKey, string.Empty);
@@ -143,14 +146,26 @@ namespace GameDevKit.Editor.Attributes
                     menu.AddDisabledItem(kPasteReplaceContent);
                     menu.AddDisabledItem(kPasteOverwriteContent);
                 }
+
+                // ---- Duplicate (Deep Copy) for array/list elements ----
+                if (TryGetArrayElementContext(property.propertyPath, out var parentPath, out var elementIndex))
+                {
+                    var target = property.serializedObject.targetObject;
+                    var elementPath = BuildElementPath(parentPath, elementIndex);
+
+                    menu.AddSeparator(string.Empty);
+                    menu.AddItem(kDuplicateDeepCopyContent, false, () =>
+                    {
+                        DuplicateArrayElementDeepCopy(target, parentPath, elementIndex, elementPath);
+                    });
+                }
             }
 
             private static void Copy(object customData)
             {
                 var property = (SerializedProperty)customData;
                 var value = property.managedReferenceValue;
-                if (value == null)
-                    return;
+                if (value == null) { return; }
 
                 string json = JsonUtility.ToJson(value);
                 string typeName = value.GetType().AssemblyQualifiedName;
@@ -162,12 +177,10 @@ namespace GameDevKit.Editor.Attributes
             private static (Type type, string json)? ReadClipboard()
             {
                 var clipboard = SessionState.GetString(kClipboardKey, string.Empty);
-                if (string.IsNullOrEmpty(clipboard))
-                    return null;
+                if (string.IsNullOrEmpty(clipboard)) { return null; }
 
                 var split = clipboard.Split(new[] { '|' }, 2);
-                if (split.Length != 2)
-                    return null;
+                if (split.Length != 2) { return null; }
 
                 var typeName = split[0];
                 var json = split[1];
@@ -185,63 +198,131 @@ namespace GameDevKit.Editor.Attributes
             {
                 var property = (SerializedProperty)customData;
                 var clip = ReadClipboard();
-                if (clip == null)
-                    return;
+                if (clip == null) { return; }
 
                 // this actually does not work for multi-selected array elements
                 // property.serializedObject.targetObjects only return the currently selected object
-                foreach (var target in property.serializedObject.targetObjects)
-                {
-                    var so = new SerializedObject(target);
-                    var sp = so.FindProperty(property.propertyPath);
-                    if (sp == null)
-                        continue;
+                // foreach (var target in property.serializedObject.targetObjects)
+                // {
+                // }
 
-                    object newValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
-                    Undo.RecordObject(target, "Paste Property (Replace)");
-                    sp.managedReferenceValue = newValue;
-                    so.ApplyModifiedProperties();
-                }
+                var sObj = property.serializedObject;
+                var sProp = sObj.FindProperty(property.propertyPath);
+                if (sProp == null) { return; }
+
+                object newValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
+                Undo.RecordObject(sObj.targetObject, "Paste Property (Replace)");
+                sProp.managedReferenceValue = newValue;
+                sObj.ApplyModifiedProperties();
             }
 
             private static void PasteOverwrite(object customData)
             {
                 var property = (SerializedProperty)customData;
                 var clip = ReadClipboard();
-                if (clip == null)
-                    return;
+                if (clip == null) { return; }
 
-                // this actually does not work for multi-selected array elements
-                // property.serializedObject.targetObjects only return the currently selected object
-                foreach (var target in property.serializedObject.targetObjects)
+                var sObj = property.serializedObject;
+                var sProp = sObj.FindProperty(property.propertyPath);
+                if (sProp == null) { return; }
+
+                var currentValue = sProp.managedReferenceValue;
+                if (currentValue == null)
                 {
-                    var so = new SerializedObject(target);
-                    var sp = so.FindProperty(property.propertyPath);
-                    if (sp == null)
-                        continue;
-
-                    var currentValue = sp.managedReferenceValue;
-
-                    if (currentValue == null)
-                    {
-                        // Fallback to Replace
-                        object newValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
-                        Undo.RecordObject(target, "Paste Property (Overwrite → Replace)");
-                        sp.managedReferenceValue = newValue;
-                    }
-                    else if (currentValue.GetType() == clip.Value.type)
-                    {
-                        Undo.RecordObject(target, "Paste Property (Overwrite)");
-                        JsonUtility.FromJsonOverwrite(clip.Value.json, currentValue);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Cannot overwrite: target type {currentValue.GetType().Name} does not match clipboard type {clip.Value.type.Name}.");
-                    }
-
-                    so.ApplyModifiedProperties();
+                    object newValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
+                    Undo.RecordObject(sObj.targetObject, "Paste Property (Overwrite → Replace)");
+                    sProp.managedReferenceValue = newValue;
                 }
+                else if (currentValue.GetType() == clip.Value.type)
+                {
+                    Undo.RecordObject(sObj.targetObject, "Paste Property (Overwrite)");
+                    JsonUtility.FromJsonOverwrite(clip.Value.json, currentValue);
+                }
+                else
+                {
+                    Debug.LogWarning($"Cannot overwrite: target type {currentValue.GetType().Name} does not match clipboard type {clip.Value.type.Name}.");
+                }
+                sObj.ApplyModifiedProperties();
             }
+
+            #region Duplicate (Deep Copy) implementation
+            private static bool TryGetArrayElementContext(string propertyPath, out string parentPath, out int index)
+            {
+                // Works whether right-click was on the element itself "...Array.data[n]"
+                // or on any nested child "...Array.data[n].child.more"
+                var m = s_arrayIndexRegex.Match(propertyPath);
+                if (!m.Success)
+                {
+                    parentPath = null;
+                    index = -1;
+                    return false;
+                }
+
+                // Trim to the element path (remove nested tail if any)
+                int cut = propertyPath.IndexOf(".Array.data[", StringComparison.Ordinal);
+                parentPath = propertyPath.Substring(0, cut);
+                index = int.Parse(m.Groups[1].Value);
+                return true;
+            }
+
+            private static string BuildElementPath(string parentPath, int index)
+            {
+                return $"{parentPath}.Array.data[{index}]";
+            }
+
+            private static void DuplicateArrayElementDeepCopy(UnityEngine.Object target, string parentPath, int srcIndex, string srcElementPath)
+            {
+                var so = new SerializedObject(target);
+                so.Update();
+
+                var arrayProp = so.FindProperty(parentPath);
+                if (arrayProp == null || !arrayProp.isArray)
+                {
+                    Debug.LogWarning($"[Duplicate (Deep Copy)] Parent is not an array/list: '{parentPath}'");
+                    return;
+                }
+
+                var srcElement = so.FindProperty(srcElementPath);
+                if (srcElement == null || srcElement.propertyType != SerializedPropertyType.ManagedReference)
+                {
+                    Debug.LogWarning($"[Duplicate (Deep Copy)] Source element not found or not managed reference: '{srcElementPath}'");
+                    return;
+                }
+
+                Undo.RecordObject(target, "Duplicate Array Element (Deep Copy)");
+
+                // Insert a new element at srcIndex + 1 (Unity duplicates reference by default).
+                arrayProp.InsertArrayElementAtIndex(srcIndex);
+
+                // Resolve destination element and replace with a real deep copy.
+                var dstIndex = srcIndex + 1;
+                var dstElementPath = BuildElementPath(parentPath, dstIndex);
+                var dstElement = so.FindProperty(dstElementPath);
+                if (dstElement == null)
+                {
+                    Debug.LogWarning($"[Duplicate (Deep Copy)] Destination element not found: '{dstElementPath}'");
+                    return;
+                }
+
+                var srcObj = srcElement.managedReferenceValue;
+                if (srcObj != null)
+                {
+                    var type = srcObj.GetType();
+                    var json = JsonUtility.ToJson(srcObj);
+                    var clone = JsonUtility.FromJson(json, type);
+                    dstElement.managedReferenceValue = clone;
+                }
+                else
+                {
+                    // Keep null if source was null
+                    dstElement.managedReferenceValue = null;
+                }
+
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(target);
+            }
+
+            #endregion Duplicate (Deep Copy) implementation
         }
 
     }
