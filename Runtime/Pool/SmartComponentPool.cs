@@ -7,33 +7,10 @@ using UnityEngine.Pool;
 
 namespace GameDevKit.Pool
 {
-    [Serializable]
-    public class ParticleSystemSmartPool : SmartComponentPool<ParticleSystem>
-    {
-        private bool _isInit;
-
-        public ParticleSystemSmartPool(ParticleSystem template, float autoReleaseTime = -1) : base(template, autoReleaseTime) { }
-
-        public override ParticleSystem GetAndAutoPool(Vector3? position = null, TimeSpan? customAutoReleaseTime = null)
-        {
-            if (_template == null) { return null; }
-            if (!_isInit)
-            {
-                _isInit = true;
-                var sceneTemplate = Pool.Template;
-                var mainModule = sceneTemplate.main;
-                if (mainModule.stopAction == ParticleSystemStopAction.Destroy)
-                {
-                    Debug.Log($"{GetPoolName(_template)} scene template has a stop action of Destroy. Changing it to None.");
-                    mainModule.stopAction = ParticleSystemStopAction.None;
-                }
-                mainModule.playOnAwake = true;
-            }
-            var pooledObj = base.GetAndAutoPool(position, customAutoReleaseTime);
-            return pooledObj;
-        }
-    }
-
+    /// <summary>
+    /// Simplifies the usage of ComponentPool with <see cref="GetAndAutoPool"/>.<br/>
+    /// Allows sharing pools between entities that use the same template (prefab or scene object).
+    /// </summary>
     [Serializable]
     public class SmartComponentPool<T> where T : Component
     {
@@ -43,7 +20,7 @@ namespace GameDevKit.Pool
         [Tooltip("Entities that use the same template (prefab or scene object) will share a pool. This reduces the amount of pooled objects.")]
         [SerializeField] private bool _shareTemplatePool = true;
 
-        [Tooltip("Time <= 0 means infinite")]
+        [Tooltip("Time < 0 means infinite")]
         [SerializeField, Min(-1)] protected float _autoReleaseTime = -1;
 
         private static readonly Dictionary<T, ComponentPool<T>> _sharedPools = new();
@@ -114,7 +91,7 @@ namespace GameDevKit.Pool
             pooledObj.gameObject.SetActive(true);
 
             var releaseSeconds = (float)(customAutoReleaseTime?.TotalSeconds ?? _autoReleaseTime);
-            if (releaseSeconds <= 0) { return pooledObj; }
+            if (releaseSeconds < 0) { return pooledObj; }
 
             ScheduleReturnToPool();
             return pooledObj;

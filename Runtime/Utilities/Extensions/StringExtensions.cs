@@ -8,7 +8,7 @@ using System.Globalization;
 
 public static class StringExtensions
 {
-    public static bool OrdinalEquals(this string text, string other) => string.Equals(text, other, StringComparison.Ordinal);
+    public static bool OrdinalEquals(this string text, string other, bool ignoreCase = false) => string.Equals(text, other, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
     /// <summary> Pitfalls are unknown! But it is faster than <see cref="OrdinalEquals"/> </summary>
     public static bool FastOrdinalEquals(this string text, string other)
@@ -60,7 +60,7 @@ public static class StringExtensions
         }
         return result;
     }
-    public static T ToEnum<T>(this string text, bool ignoreCase = true) where T : struct, IConvertible
+    public static T ToEnum<T>(this string text, bool ignoreCase = true) where T : struct, Enum
     {
         text = text?.Trim();
         if (text.IsNullOrEmpty()) { return default; }
@@ -71,11 +71,7 @@ public static class StringExtensions
         return result;
     }
 
-    public static Vector2 ToVector2(this string text)
-    {
-        return ToVector3(text);
-    }
-
+    public static Vector2 ToVector2(this string text) => ToVector3(text);
     public static Vector3 ToVector3(this string text)
     {
         if (!IsParsable(ref text)) { return default; }
@@ -97,10 +93,7 @@ public static class StringExtensions
         return result;
     }
 
-    public static bool IsNullOrEmpty(this string text)
-    {
-        return string.IsNullOrEmpty(text);
-    }
+    public static bool IsNullOrEmpty(this string text) => string.IsNullOrEmpty(text);
 
     public static string Format(this string text, object arg0) => string.Format(text, arg0);
     public static string Format(this string text, params object[] args) => string.Format(text, args);
@@ -149,11 +142,7 @@ public static class StringExtensions
         return encoding.GetString(bytes);
     }
 
-    public static char GetLastChar(this string text)
-    {
-        if (text.IsNullOrEmpty()) { return '\0'; }
-        return text[^1];
-    }
+    public static char GetLastChar(this string text) => text.IsNullOrEmpty() ? '\0' : text[^1];
 
     public static string GetBetween(this string text, int startIndex, int endIndex)
     {
@@ -165,37 +154,16 @@ public static class StringExtensions
         return text[startIndex..endIndex];
     }
 
+    private static readonly Regex _separateCamelCaseRegex = new(@"(?<=[a-z])(?=[A-Z])|(?<=[A-Za-z])(?=\d)|(?<=\d)(?=[A-Za-z])", RegexOptions.Compiled);
+
     /// <summary> "SeparateCamelCase" -> "Separate Camel Case" </summary>
-    public static string SeparateCamelCase(this string text, string separator = " ")
-    {
-        return Regex.Replace(text, @"(\p{Lu})(?<=\p{Ll}\1|(\p{Lu}|\p{Ll})\1(?=\p{Ll}))", separator + "$1");
-    }
+    public static string SeparateCamelCase(this string text, string separator = " ") => (text == null || text.Length <= 1) ? text : _separateCamelCaseRegex.Replace(text, separator + "$1");
 
-    public static string VOffset(this string text, float offset)
-    {
-        return $"<voffset={offset}em>{text}</voffset>";
-    }
-
-    public static string Bold(this string text)
-    {
-        return $"<b>{text}</b>";
-    }
-    public static string Colorize(this string text, Color color)
-    {
-        var hex = ColorUtility.ToHtmlStringRGBA(color);
-        return $"<color=#{hex}>{text}</color>";
-    }
-    public static string Colorize(this string text, string hex)
-    {
-        return $"<color=#{hex.TrimStart('#')}>{text}</color>";
-    }
-    public static string Resize(this string text, float scale)
-    {
-        return $"<size={scale * 100}%>{text}</size>";
-    }
-    public static string NoBreak(this string text)
-    {
-        return $"<nobr>{text}</nobr>";
-    }
+    public static string VOffset(this string text, float offset) => $"<voffset={offset}em>{text}</voffset>";
+    public static string Bold(this string text) => $"<b>{text}</b>";
+    public static string Colorize(this string text, Color color) => $"<color=#{ColorUtility.ToHtmlStringRGBA(color)}>{text}</color>";
+    public static string Colorize(this string text, string hex) => $"<color=#{hex.TrimStart('#')}>{text}</color>";
+    public static string Resize(this string text, float scale) => $"<size={scale * 100}%>{text}</size>";
+    public static string NoBreak(this string text) => $"<nobr>{text}</nobr>";
 
 }
