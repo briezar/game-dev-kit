@@ -1,4 +1,5 @@
 
+using System.Buffers;
 using UnityEngine;
 using static RectTransformPreset;
 
@@ -115,9 +116,13 @@ public static class RectTransformExtensions
     {
         if (rectTransform == null) { return Vector3.zero; }
 
-        var corners = rectTransform.GetWorldCorners();
+        var corners = ArrayPool<Vector3>.Shared.Rent(4);
+        rectTransform.GetWorldCorners(corners);
+
         var x = Mathf.Lerp(corners[1].x, corners[2].x, normalizedPos.x);
         var y = Mathf.Lerp(corners[0].y, corners[1].y, normalizedPos.y);
+
+        ArrayPool<Vector3>.Shared.Return(corners);
 
         return new Vector3(x, y);
     }

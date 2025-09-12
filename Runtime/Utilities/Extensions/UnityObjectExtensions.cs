@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +15,6 @@ namespace SpecializedExtensions
     {
         public static void OverrideSortingLayer(this GameObject gameObject, bool allowClick = false, string layer = "", int sortingOrder = 0)
         {
-            if (gameObject == null) { throw new NullReferenceException($"{gameObject.name} is null or destroyed!"); }
-
             bool alreadyActive = gameObject.activeSelf;
 
             // GameObject must be active to change sorting
@@ -50,15 +49,10 @@ namespace SpecializedExtensions
                 }
             }
         }
-        public static void OverrideSortingLayer(this Component component, bool allowClick = false, string layer = "", int sortingOrder = 0)
-        {
-            OverrideSortingLayer(component.gameObject, allowClick, layer, sortingOrder);
-        }
+        public static void OverrideSortingLayer(this Component component, bool allowClick = false, string layer = "", int sortingOrder = 0) => OverrideSortingLayer(component.gameObject, allowClick, layer, sortingOrder);
 
         public static void StopOverrideSorting(this GameObject gameObject, bool destroyCanvas = false)
         {
-            if (gameObject == null) { throw new NullReferenceException($"{gameObject.name} is null or destroyed!"); }
-
             if (gameObject.TryGetComponent<Canvas>(out var canvas))
             {
                 if (!destroyCanvas)
@@ -71,39 +65,21 @@ namespace SpecializedExtensions
                 Canvas.ForceUpdateCanvases();
             }
         }
-        public static void StopOverrideSorting(this Component component, bool destroyCanvas = false)
-        {
-            StopOverrideSorting(component.gameObject, destroyCanvas);
-        }
-
+        public static void StopOverrideSorting(this Component component, bool destroyCanvas = false) => StopOverrideSorting(component.gameObject, destroyCanvas);
 
         public static void AddEventTrigger(this GameObject gameObject, Action action, EventTriggerType type = EventTriggerType.PointerDown)
         {
-            if (gameObject == null) { throw new NullReferenceException($"{gameObject.name} is null or destroyed!"); }
-
             var trigger = gameObject.GetOrAddComponent<EventTrigger>();
             var entry = new EventTrigger.Entry();
             entry.callback.AddListener((eventData) => { action?.Invoke(); });
             entry.eventID = type;
             trigger.triggers.Add(entry);
         }
-        public static void AddEventTrigger(this Component component, Action action, EventTriggerType type = EventTriggerType.PointerDown)
-        {
-            AddEventTrigger(component.gameObject, action, type);
-        }
+        public static void AddEventTrigger(this Component component, Action action, EventTriggerType type = EventTriggerType.PointerDown) => AddEventTrigger(component.gameObject, action, type);
 
         /// <summary> Scales with transform! </summary>
-        public static Vector3 GetMiddleOfEdge(this GameObject gameObject, RectTransform.Edge edge, Vector2 localDiff = default)
+        public static Vector3 GetMiddleOfEdge(this RectTransform rectTransform, RectTransform.Edge edge, Vector2 localDiff = default)
         {
-            if (gameObject == null) { throw new NullReferenceException($"{gameObject.name} is null or destroyed!"); }
-
-            var rectTransform = gameObject.transform as RectTransform;
-            if (rectTransform == null)
-            {
-                Debug.LogWarning($"{gameObject} does not have RectTransform component");
-                return Vector3.zero;
-            }
-
             var height = rectTransform.rect.height;
             var width = rectTransform.rect.width;
             var localPoint = localDiff;
@@ -127,10 +103,6 @@ namespace SpecializedExtensions
             var worldPoint = rectTransform.TransformPoint(localPoint);
             return worldPoint;
         }
-        public static Vector3 GetMiddleOfEdge(this Component component, RectTransform.Edge edge, Vector2 localDiff = default)
-        {
-            return GetMiddleOfEdge(component.gameObject, edge, localDiff);
-        }
     }
 }
 
@@ -146,19 +118,10 @@ public static class UnityObjectExtensions
         return obj.scene == null || obj.scene.name == obj.name || obj.scene.name.IsNullOrEmpty();
     }
 
-    public static bool IsUnityComponent(this Type type)
-    {
-        return typeof(Component).IsAssignableFrom(type);
-    }
+    public static bool IsUnityComponent(this Type type) => typeof(Component).IsAssignableFrom(type);
 
-    public static GameObject GetParent(this GameObject gameObject)
-    {
-        return gameObject.transform.parent.gameObject;
-    }
-    public static GameObject GetParent(this Component component)
-    {
-        return GetParent(component.gameObject);
-    }
+    public static GameObject GetParent(this GameObject gameObject) => gameObject.transform.parent.gameObject;
+    public static GameObject GetParent(this Component component) => GetParent(component.gameObject);
 
     public static void DestroyGameObject(this GameObject gameObject)
     {
@@ -182,40 +145,41 @@ public static class UnityObjectExtensions
         DestroyGameObjectImmediate(component.gameObject);
     }
 
+    public static bool TryGetComponentInParent<T>(this GameObject gameObject, out T component)
+    {
+        component = gameObject.GetComponentInParent<T>();
+        return component != null;
+    }
+    public static bool TryGetComponentInParent<T>(this Component thisComponent, out T component) => TryGetComponentInParent(thisComponent.gameObject, out component);
+
     public static bool TryGetComponentInChildren<T>(this GameObject gameObject, out T component)
     {
-        component = default;
-        if (gameObject == null) { return false; }
-
         component = gameObject.GetComponentInChildren<T>();
         return component != null;
     }
-    public static bool TryGetComponentInChildren<T>(this Component thisComponent, out T component)
+    public static bool TryGetComponentInChildren<T>(this Component thisComponent, out T component) => TryGetComponentInChildren(thisComponent.gameObject, out component);
+
+    public static void GetComponentsInChildrenExceptSelf<T>(this Component component, bool includeInactive, List<T> result)
     {
-        return TryGetComponentInChildren(thisComponent.gameObject, out component);
+        component.gameObject.GetComponentsInChildren(includeInactive, result);
+        result.RemoveAll(c => c.Equals(component));
+    }
+    public static List<T> GetComponentsInChildrenExceptSelf<T>(this Component component, bool includeInactive = false)
+    {
+        var list = new List<T>();
+        GetComponentsInChildrenExceptSelf(component, includeInactive, list);
+        return list;
     }
 
     public static T GetOrAddComponent<T>(this GameObject gameObject) where T : Component
     {
-        if (gameObject == null) { return null; }
-
         if (!gameObject.TryGetComponent<T>(out var result))
         {
             result = gameObject.AddComponent<T>();
         }
         return result;
     }
-    public static T GetOrAddComponent<T>(this Component component) where T : Component
-    {
-        return GetOrAddComponent<T>(component.gameObject);
-    }
-
-    public static T AddComponent<T>(this Component component) where T : Component
-    {
-        var newComponent = component.gameObject.AddComponent<T>();
-        return newComponent;
-    }
-
+    public static T GetOrAddComponent<T>(this Component component) where T : Component => GetOrAddComponent<T>(component.gameObject);
 
     public static T LazyGet<T>(this Component component, ref T backingField, Func<T> selector)
     {
@@ -231,19 +195,14 @@ public static class UnityObjectExtensions
         return LazyGet(component, ref backingField, () => component.gameObject.GetOrAddComponent<T>());
     }
 
-    public static RectTransform GetRectTransform(this Component component)
-    {
-        return component.transform as RectTransform;
-    }
-    public static RectTransform GetRectTransform(this GameObject gameObject)
-    {
-        return gameObject.transform as RectTransform;
-    }
+    public static RectTransform GetRectTransform(this Component component) => component.transform as RectTransform;
+    public static RectTransform GetRectTransform(this GameObject gameObject) => gameObject.transform as RectTransform;
 
     public static void DestroyAllChildren(this Transform parent)
     {
-        foreach (Transform child in parent)
+        for (int i = parent.childCount - 1; i >= 0; i--)
         {
+            var child = parent.GetChild(i);
             child.DestroyGameObject();
         }
     }
@@ -270,22 +229,17 @@ public static class UnityObjectExtensions
 
     public static int GetChildCount(this Transform parent, Func<Transform, bool> condition)
     {
-        return EnumerateChildren(parent, condition).Count();
+        var count = 0;
+        var childCount = parent.childCount;
+        for (int i = 0; i < childCount; i++)
+        {
+            var child = parent.GetChild(i);
+            if (condition == null || condition(child)) { count++; }
+        }
+        return count;
     }
 
-    /// <summary> 0 = BottomLeft, 1 = TopLeft, 2 = TopRight, 3 = BottomRight </summary>
-    public static Vector3[] GetWorldCorners(this Transform transform)
-    {
-        var rectTransform = transform as RectTransform;
-        if (rectTransform == null) { return null; }
-
-        var worldCorners = new Vector3[4];
-        rectTransform.GetWorldCorners(worldCorners);
-
-        return worldCorners;
-    }
-
-    public static void ClampInScreen(this Transform transform, float offset = 0, Camera camera = null)
+    public static void ClampInScreen(this RectTransform rectTransform, float offset = 0, Camera camera = null)
     {
         camera ??= Camera.main;
 
@@ -293,9 +247,13 @@ public static class UnityObjectExtensions
         var minPos = camera.ScreenToWorldPoint(safeArea.min);
         var maxPos = camera.ScreenToWorldPoint(safeArea.max);
 
-        var corners = transform.GetWorldCorners();
+        var corners = ArrayPool<Vector3>.Shared.Rent(4);
+        rectTransform.GetWorldCorners(corners);
+
         var minCorner = corners[0];
         var maxCorner = corners[2];
+
+        ArrayPool<Vector3>.Shared.Return(corners);
 
         float xOffset = 0;
         float yOffset = 0;
@@ -322,7 +280,7 @@ public static class UnityObjectExtensions
 
         yOffset += offset * Mathf.Sign(yOffset);
 
-        transform.position += new Vector3(xOffset, yOffset);
+        rectTransform.position += new Vector3(xOffset, yOffset);
     }
 
     public static void Stop(this Coroutine coroutine, MonoBehaviour runner)
@@ -349,19 +307,6 @@ public static class UnityObjectExtensions
             yield return YieldCollection.WaitForEndOfFrame();
             action?.Invoke();
         }
-    }
-
-    public static T[] GetComponentsInChildrenExceptSelf<T>(this Component component, bool includeInactive = false)
-    {
-        var list = new List<T>();
-        GetComponentsInChildrenExceptSelf(component, includeInactive, list);
-        return list.ToArray();
-    }
-
-    public static void GetComponentsInChildrenExceptSelf<T>(this Component component, bool includeInactive, List<T> result)
-    {
-        component.gameObject.GetComponentsInChildren(includeInactive, result);
-        result.RemoveAll(c => c.Equals(component));
     }
 
     public static void RebuildImmediate(this LayoutGroup layout)
