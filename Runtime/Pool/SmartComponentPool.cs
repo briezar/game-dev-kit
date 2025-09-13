@@ -34,15 +34,15 @@ namespace GameDevKit.Pool
 
                 if (_shareTemplatePool && _sharedPools.TryGetValue(_template, out var sharedPool))
                 {
-                    if (PoolIsValid(sharedPool))
+                    if (sharedPool.IsValid())
                     {
                         return sharedPool;
                     }
 
-                    _sharedPools.RemoveWhere(pair => !PoolIsValid(pair.Value));
+                    _sharedPools.RemoveWhere(pair => !pair.Value.IsValid());
                 }
 
-                if (PoolIsValid(_poolCached)) { return _poolCached; }
+                if (_poolCached.IsValid()) { return _poolCached; }
 
                 var container = GetContainer(_template);
                 _poolCached = new ComponentPool<T>(_template, container);
@@ -54,7 +54,6 @@ namespace GameDevKit.Pool
             }
         }
 
-        private static bool PoolIsValid(ComponentPool<T> pool) => pool != null && pool.Container != null;
 
         private SmartComponentPool() { }
         public SmartComponentPool(T template, float autoReleaseTime = -1)
@@ -104,25 +103,30 @@ namespace GameDevKit.Pool
                     if (pooledObj == null) { return; }
                     if (!pooledObj.gameObject.activeSelf)
                     {
-                        ReleaseOrDestroy();
+                        this.ReleaseOrDestroy(pooledObj);
                         return;
                     }
                     releaseSeconds -= Time.deltaTime;
                 }
-                ReleaseOrDestroy();
-
-                void ReleaseOrDestroy()
-                {
-                    if (pooledObj == null) { return; }
-                    if (Pool == null)
-                    {
-                        Debug.LogWarning($"Pool is null for {pooledObj.name}, destroying instead of releasing!");
-                        UnityEngine.Object.Destroy(pooledObj.gameObject);
-                        return;
-                    }
-                    Pool.Release(pooledObj);
-                }
+                this.ReleaseOrDestroy(pooledObj);
             }
+        }
+    }
+
+    public static class SmartComponentPoolExtensions
+    {
+        public static bool IsValid<T>(this SmartComponentPool<T> smartPool) where T : Component => smartPool?.Pool?.Container != null;
+
+        public static void ReleaseOrDestroy<T>(this SmartComponentPool<T> smartPool, T pooledObj) where T : Component
+        {
+            if (pooledObj == null) { return; }
+            if (!smartPool.IsValid())
+            {
+                Debug.LogWarning($"Pool is null for {pooledObj.name}, destroying instead of releasing!");
+                UnityEngine.Object.Destroy(pooledObj.gameObject);
+                return;
+            }
+            smartPool.Pool.Release(pooledObj);
         }
     }
 

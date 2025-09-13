@@ -223,8 +223,10 @@ namespace GameDevKit.Pool
         }
     }
 
-    public static class ObjectPoolExtensions
+    public static class ComponentPoolExtensions
     {
+        public static bool IsValid<T>(this ComponentPool<T> pool) where T : Component => pool?.Container != null;
+
         public static T Get<T>(this IComponentPool<T> objectPool, Vector3 position, bool activate = true) where T : Component
         {
             var element = objectPool.Get(false);
