@@ -17,11 +17,11 @@ namespace GameDevKit.Pool
         [Required]
         [SerializeField] protected T _template;
 
-        [Tooltip("Entities that use the same template (prefab or scene object) will share a pool. This reduces the amount of pooled objects.")]
-        [SerializeField] private bool _shareTemplatePool = true;
+        [field: Tooltip("Entities that use the same template (prefab or scene object) will share a pool. This reduces the amount of pooled objects.")]
+        [field: SerializeField] public bool ShareTemplatePool { get; set; } = true;
 
-        [Tooltip("Time < 0 means infinite")]
-        [SerializeField, Min(-1)] protected float _autoReleaseTime = -1;
+        [field: Tooltip("Time < 0 means infinite")]
+        [field: SerializeField, Min(-1)] public float AutoReleaseTime { get; set; } = -1;
 
         private static readonly Dictionary<T, ComponentPool<T>> _sharedPools = new();
 
@@ -30,9 +30,15 @@ namespace GameDevKit.Pool
         {
             get
             {
+                if (!Application.isPlaying)
+                {
+                    Debug.LogWarning("Pools are only available in Play Mode!");
+                    return null;
+                }
+
                 if (_template == null) { return null; }
 
-                if (_shareTemplatePool && _sharedPools.TryGetValue(_template, out var sharedPool))
+                if (ShareTemplatePool && _sharedPools.TryGetValue(_template, out var sharedPool))
                 {
                     if (sharedPool.IsValid())
                     {
@@ -46,7 +52,7 @@ namespace GameDevKit.Pool
 
                 var container = GetContainer(_template);
                 _poolCached = new ComponentPool<T>(_template, container);
-                if (_shareTemplatePool)
+                if (ShareTemplatePool)
                 {
                     _sharedPools[_template] = _poolCached;
                 }
@@ -59,7 +65,7 @@ namespace GameDevKit.Pool
         public SmartComponentPool(T template, float autoReleaseTime = -1)
         {
             _template = template;
-            _autoReleaseTime = autoReleaseTime;
+            AutoReleaseTime = autoReleaseTime;
         }
 
         protected static string GetPoolName(T template) => $"{template.name} ({template.GetType().Name}) Pool";
@@ -89,7 +95,7 @@ namespace GameDevKit.Pool
             if (position != null) { pooledObj.transform.position = position.Value; }
             pooledObj.gameObject.SetActive(true);
 
-            var releaseSeconds = (float)(customAutoReleaseTime?.TotalSeconds ?? _autoReleaseTime);
+            var releaseSeconds = (float)(customAutoReleaseTime?.TotalSeconds ?? AutoReleaseTime);
             if (releaseSeconds < 0) { return pooledObj; }
 
             ScheduleReturnToPool();
