@@ -35,8 +35,12 @@ namespace GameDevKit
     {
         [SerializeField] private string _assemblyQualifiedName;
 
+        public readonly string AssemblyQualifiedName => _assemblyQualifiedName;
+
         private Type _type;
-        public Type Type => _type ??= Type.GetType(_assemblyQualifiedName, true);
+        public Type Type => _type ??= Type.GetType(_assemblyQualifiedName);
+
+        public bool IsValid => Type != null;
 
         public static class EditorProps
         {

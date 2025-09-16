@@ -9,28 +9,29 @@ namespace GameDevKit.Collections
     [Serializable]
     public class ReadOnlyLookupList<TKey, TValue> : IEnumerable<TValue>
     {
-        [SerializeField] private List<TValue> _values = new();
+        [SerializeField] protected List<TValue> _values = new();
 
         private Dictionary<TKey, TValue> _dict;
 
-        private Func<TValue, TKey> _keySelector;
         private const int DictionaryThreshold = 8;
 
-        private ReadOnlyLookupList() { }
-        public ReadOnlyLookupList(Func<TValue, TKey> keySelector) => _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
+        /// <summary>
+        /// Must be set or overridden before using the collection.
+        /// </summary>
+        public virtual Func<TValue, TKey> KeySelector { get; protected set; }
+
+        protected ReadOnlyLookupList() { }
+        public ReadOnlyLookupList(Func<TValue, TKey> keySelector) => KeySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         public ReadOnlyLookupList(IEnumerable<TValue> elements, Func<TValue, TKey> keySelector)
         {
             _values = elements.ToList();
-            _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
+            KeySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
         public IReadOnlyList<TValue> Values => _values;
         public int Count => _values.Count;
 
-        /// <summary>
-        /// Must be called if using the lookup list in the editor.
-        /// </summary>
-        public void Bind(Func<TValue, TKey> keySelector) => _keySelector = keySelector;
+        public virtual void Bind(Func<TValue, TKey> keySelector) => KeySelector = keySelector;
 
         /// <summary>
         /// Returns true if the value was found, otherwise false.
@@ -45,7 +46,7 @@ namespace GameDevKit.Collections
 
             foreach (var item in _values)
             {
-                if (EqualityComparer<TKey>.Default.Equals(_keySelector(item), key))
+                if (EqualityComparer<TKey>.Default.Equals(KeySelector(item), key))
                 {
                     value = item;
                     return true;
@@ -68,7 +69,7 @@ namespace GameDevKit.Collections
             _dict = new(_values.Count);
             foreach (var item in _values)
             {
-                _dict[_keySelector(item)] = item;
+                _dict[KeySelector(item)] = item;
             }
         }
 
