@@ -123,10 +123,16 @@ namespace GameDevKit.Editor
             }
         }
 
-        public static Object[] FindAssets(string filter, string[] searchInFolders)
+        public static string[] FindAssetGuids<T>(string filter, params string[] searchInFolders) => FindAssetGuids(typeof(T), filter, searchInFolders);
+        public static string[] FindAssetGuids(Type assetType, string filter, params string[] searchInFolders) => FindAssetGuids($"{filter} t:{assetType.Name}", searchInFolders);
+        public static string[] FindAssetGuids(string filter, params string[] searchInFolders)
         {
             var guids = AssetDatabase.FindAssets($"{filter} a:assets", searchInFolders?.Where(s => !s.IsNullOrEmpty()).ToArray());
-
+            return guids;
+        }
+        public static Object[] FindAssets(string filter, params string[] searchInFolders)
+        {
+            var guids = FindAssetGuids(filter, searchInFolders);
             var assets = guids.Select(guid =>
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
