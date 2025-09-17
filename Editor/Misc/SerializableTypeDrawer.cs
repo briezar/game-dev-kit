@@ -9,28 +9,22 @@ namespace GameDevKit.Editor
     [CustomPropertyDrawer(typeof(SerializableType))]
     public class SerializableTypeDrawer : PropertyDrawer
     {
-        private SerializedProperty _assemblyQualifiedNameProp;
-        private TypeFilterAttribute _typeFilter;
-
         private bool _isFirstUpdate = true;
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            if (_isFirstUpdate)
-            {
-                _assemblyQualifiedNameProp = property.FindPropertyRelative(SerializableType.EditorProps.AssemblyQualifiedName);
-                _typeFilter = (TypeFilterAttribute)Attribute.GetCustomAttribute(fieldInfo, typeof(TypeFilterAttribute)) ?? new TypeFilterAttribute(null);
-            }
+            var assemblyQualifiedNameProp = property.FindPropertyRelative(SerializableType.EditorProps.AssemblyQualifiedName);
+            var typeFilter = (TypeFilterAttribute)Attribute.GetCustomAttribute(fieldInfo, typeof(TypeFilterAttribute)) ?? new TypeFilterAttribute(null);
 
-            var selectedType = Type.GetType(_assemblyQualifiedNameProp.stringValue);
-            var isInvalidType = selectedType != null && !_typeFilter.IsValidType(selectedType);
+            var selectedType = Type.GetType(assemblyQualifiedNameProp.stringValue);
+            var isInvalidType = selectedType != null && !typeFilter.IsValidType(selectedType);
             var btnStyle = new GUIStyle(EditorStyles.miniPullDown);
 
             if (isInvalidType)
             {
                 if (_isFirstUpdate)
                 {
-                    Debug.LogWarning($"Type '{selectedType.Name}' is not a valid type based on {nameof(TypeFilterAttribute)}\n{_typeFilter.GetFilterInfo()}", property.serializedObject.targetObject);
+                    Debug.LogWarning($"Type '{selectedType.Name}' is not a valid type based on {nameof(TypeFilterAttribute)}\n{typeFilter.GetFilterInfo()}", property.serializedObject.targetObject);
                 }
 
                 btnStyle.normal.textColor = Color.yellowNice;
@@ -43,9 +37,9 @@ namespace GameDevKit.Editor
             if (EditorGUI.DropdownButton(position, new GUIContent(selectedType != null ? $"{selectedType.Name} ({selectedType.FullName})" : "None"), FocusType.Keyboard, btnStyle))
             {
                 if (SerializableTypePopup.IsOpened) { return; }
-                SerializableTypePopup.Open(position, selectedType, _typeFilter, t =>
+                SerializableTypePopup.Open(position, selectedType, typeFilter, t =>
                 {
-                    _assemblyQualifiedNameProp.stringValue = t.AssemblyQualifiedName;
+                    assemblyQualifiedNameProp.stringValue = t?.AssemblyQualifiedName;
                     property.serializedObject.ApplyModifiedProperties();
                 });
             }
@@ -84,23 +78,23 @@ namespace GameDevKit.Editor
             _allTypes ??= LoadAllProjectTypes();
             InitStyles();
 
-            var win = CreateInstance<SerializableTypePopup>();
-            win._selectedType = selectedType;
-            win._typeFilter = typeFilter ?? new TypeFilterAttribute(null);
-            win._onSelect = onSelect;
-            win.FilterTypes();
+            var window = CreateInstance<SerializableTypePopup>();
+            window._selectedType = selectedType;
+            window._typeFilter = typeFilter ?? new TypeFilterAttribute(null);
+            window._onSelect = onSelect;
+            window.FilterTypes();
 
             if (selectedType != null)
             {
-                win._pendingScrollIndex = win._filteredTypes.IndexOf(selectedType);
-                if (win._pendingScrollIndex >= 0)
+                window._pendingScrollIndex = window._filteredTypes.IndexOf(selectedType);
+                if (window._pendingScrollIndex >= 0)
                 {
-                    win._hoverIndex = win._pendingScrollIndex;
+                    window._hoverIndex = window._pendingScrollIndex;
                 }
             }
 
             var screenRect = GUIUtility.GUIToScreenRect(activatorRect);
-            win.ShowAsDropDown(screenRect, new Vector2(EditorGUIUtility.currentViewWidth - 20, PopupHeight));
+            window.ShowAsDropDown(screenRect, new Vector2(EditorGUIUtility.currentViewWidth - 20, PopupHeight));
         }
 
         private void OnEnable()
@@ -139,17 +133,18 @@ namespace GameDevKit.Editor
 
             for (int i = 0; i < _filteredTypes.Count; i++)
             {
-                var t = _filteredTypes[i];
+                var type = _filteredTypes[i];
+
                 var itemRect = new Rect(0, i * RowHeight, contentRect.width, RowHeight);
 
                 if (itemRect.Contains(Event.current.mousePosition))
                     _hoverIndex = i;
 
-                var style = (_selectedType == t || _hoverIndex == i) ? _selectedItemStyle : _listItemStyle;
+                var style = (_selectedType == type || _hoverIndex == i) ? _selectedItemStyle : _listItemStyle;
 
-                if (GUI.Button(itemRect, $"{t.Name} ({t.FullName})", style))
+                if (GUI.Button(itemRect, type == null ? "None" : $"{type.Name} ({type.FullName})", style))
                 {
-                    _onSelect?.Invoke(t);
+                    _onSelect?.Invoke(type);
                     Close();
                 }
             }
@@ -190,6 +185,7 @@ namespace GameDevKit.Editor
         private void FilterTypes()
         {
             _filteredTypes.Clear();
+            _filteredTypes.Add(null);
             if (string.IsNullOrEmpty(_searchTerm))
             {
                 _filteredTypes.AddRange(_allTypes.Where(t => _typeFilter.IsValidType(t)));
@@ -226,19 +222,19 @@ namespace GameDevKit.Editor
                     var assemblyName = t.Assembly.GetName().Name;
                     foreach (var excluded in excludedAssembliesStartWith)
                     {
-                        if (assemblyName.StartsWith(excluded)) { return false; }
+                        if (assemblyName.StartsWith(excluded, StringComparison.Ordinal)) { return false; }
                     }
 
-                    if (excludedAssemblies.Contains(assemblyName)) { return false; }
+                    if (excludedAssemblies.Contains(assemblyName, StringComparer.Ordinal)) { return false; }
 
                     foreach (var excluded in excludedTypesStartWith)
                     {
-                        if (t.FullName.StartsWith(excluded)) { return false; }
+                        if (t.FullName.StartsWith(excluded, StringComparison.Ordinal)) { return false; }
                     }
 
                     foreach (var excluded in excludedTypesContain)
                     {
-                        if (t.FullName.Contains(excluded)) { return false; }
+                        if (t.FullName.Contains(excluded, StringComparison.Ordinal)) { return false; }
                     }
 
                     return true;

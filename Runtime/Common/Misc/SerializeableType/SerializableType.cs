@@ -3,33 +3,6 @@ using UnityEngine;
 
 namespace GameDevKit
 {
-    public class TypeFilterAttribute : PropertyAttribute
-    {
-        public readonly bool AllowAbstract;
-        public readonly bool AllowInterface;
-        public readonly bool AllowGeneric;
-        public readonly Type FilterType;
-
-        public TypeFilterAttribute(Type filterType, bool allowAbstract = false, bool allowInterface = false, bool allowGeneric = false)
-        {
-            (FilterType, AllowAbstract, AllowInterface, AllowGeneric) = (filterType, allowAbstract, allowInterface, allowGeneric);
-        }
-
-        public bool IsValidType(Type type)
-        {
-            if (!AllowAbstract && type.IsAbstract) { return false; }
-            if (!AllowInterface && type.IsInterface) { return false; }
-            if (!AllowGeneric && type.IsGenericType) { return false; }
-
-            return FilterType == null || type.Implements(FilterType);
-        }
-
-        public string GetFilterInfo()
-        {
-            return $"Valid types: {(FilterType != null ? FilterType : "Any")}, AllowAbstract: {AllowAbstract}, AllowInterface: {AllowInterface}, AllowGeneric: {AllowGeneric}";
-        }
-    }
-
     [Serializable]
     public struct SerializableType : IEquatable<SerializableType>, IEquatable<Type>
     {
@@ -38,9 +11,25 @@ namespace GameDevKit
         public readonly string AssemblyQualifiedName => _assemblyQualifiedName;
 
         private Type _type;
-        public Type Type => _type ??= Type.GetType(_assemblyQualifiedName);
+        public Type Type
+        {
+            get
+            {
+                if (_type == null)
+                {
+                    _type = Type.GetType(_assemblyQualifiedName);
+                    if (_type == null)
+                    {
+                        Debug.LogWarning($"[SerializableType] Failed to resolve type from AssemblyQualifiedName '{_assemblyQualifiedName}'");
+                        _assemblyQualifiedName = string.Empty;
+                        return null;
+                    }
+                }
+                return _type;
+            }
+        }
 
-        public bool IsValid => Type != null;
+        public bool IsValid => !_assemblyQualifiedName.IsNullOrEmpty() && Type != null;
 
         public static class EditorProps
         {
@@ -73,7 +62,6 @@ namespace GameDevKit
         };
 
         public override readonly int GetHashCode() => _assemblyQualifiedName.GetHashCode();
-
         public override readonly string ToString() => _assemblyQualifiedName;
     }
 }
