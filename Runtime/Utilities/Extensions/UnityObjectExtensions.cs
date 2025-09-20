@@ -171,6 +171,8 @@ public static class UnityObjectExtensions
         return list;
     }
 
+    public static T AddComponent<T>(this Component component) where T : Component => component.gameObject.AddComponent<T>();
+
     public static T GetOrAddComponent<T>(this GameObject gameObject) where T : Component
     {
         if (!gameObject.TryGetComponent<T>(out var result))
