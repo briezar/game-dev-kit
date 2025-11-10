@@ -1,15 +1,15 @@
 {
-  "name": "com.viridian.game-dev-kit",
+  "name": "com.briezar.gamedevkit",
   "version": "1.0.0",
   "displayName": "GameDevKit",
   "description": "A set of common tools used to make games",
-  "unity": "2021.3",
+  "unity": "6000.0",
   "author": {
-    "name": "Viridian"
+    "name": "Briezar"
   },
   "dependencies": {
-    "com.cysharp.unitask": "2.5.13",
-    "com.kyrylokuzyk.primetween": "1.3.3",
+    "com.cysharp.unitask": "2.5.10",
+    "com.kyrylokuzyk.primetween": "1.3.5",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   }
 }

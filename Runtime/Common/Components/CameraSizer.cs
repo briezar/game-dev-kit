@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EditorAttributes;
 using UnityEngine;
 
 namespace GameDevKit
@@ -11,9 +12,17 @@ namespace GameDevKit
         [SerializeField] private float _referenceWidth = 1080f;
         [SerializeField] private float _referenceHeight = 1920f;
 
+        private Camera _cam;
+
         private void Start()
         {
-            if (!TryGetComponent(out Camera camera))
+            UpdateCameraSize();
+        }
+
+        [Button]
+        public void UpdateCameraSize()
+        {
+            if (_cam == null && !TryGetComponent(out _cam))
             {
                 Debug.LogError("CameraSizer requires a Camera component.");
                 return;
@@ -29,12 +38,12 @@ namespace GameDevKit
             {
                 // Screen is narrower than reference, match width
                 float differenceInSize = targetAspect / windowAspect;
-                camera.orthographicSize = baseOrthographicSize * differenceInSize;
+                _cam.orthographicSize = baseOrthographicSize * differenceInSize;
             }
             else
             {
                 // Screen is equal or wider than reference, match height
-                camera.orthographicSize = baseOrthographicSize;
+                _cam.orthographicSize = baseOrthographicSize;
             }
         }
     }

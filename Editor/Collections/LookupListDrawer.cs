@@ -8,8 +8,8 @@ using UnityEngine;
 
 namespace GameDevKit.Editor.Collections
 {
-    [CustomPropertyDrawer(typeof(ReadOnlyLookupList<,>), true)]
-    public class ReadOnlyLookupListDrawer : SingleLineObjectReferenceDrawer
+    [CustomPropertyDrawer(typeof(LookupList<,>), true)]
+    public class LookupListDrawer : SingleLineObjectReferenceDrawer
     {
         protected override string GetObjectName() => "_values";
     }
