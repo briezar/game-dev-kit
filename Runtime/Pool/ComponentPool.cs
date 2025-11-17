@@ -36,7 +36,7 @@ namespace GameDevKit.Pool
         public IReadOnlyCollection<T> ActiveElements => _activeSet;
         public IReadOnlyCollection<T> InactiveElements => _inactiveStack;
 
-        public bool InstantiateSceneTemplate { get; init; } = true;
+        public readonly bool InstantiateSceneTemplate;
 
         /// <summary> Editing this can affect prefab data if template is a prefab!  </summary>
         public T OriginalTemplate => _template;
@@ -66,12 +66,16 @@ namespace GameDevKit.Pool
 
         private T _sceneTemplate;
 
-        public ComponentPool(T template, Transform container)
+        public ComponentPool(T template, Transform container, bool instantiateSceneTemplate = true)
         {
             _template = template;
             Container = container;
+            InstantiateSceneTemplate = instantiateSceneTemplate;
 
-            Template.gameObject.SetActive(false);
+            if (instantiateSceneTemplate)
+            {
+                Template.gameObject.SetActive(false);
+            }
         }
 
         private readonly Dictionary<T, Action<T>> _pendingUpdates = new();

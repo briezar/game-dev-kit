@@ -32,10 +32,7 @@ namespace GameDevKit.Collections
         public int Count => _set.Count;
         bool ICollection<T>.IsReadOnly => true;
 
-        public ReadOnlySet(ISet<T> set)
-        {
-            _set = set;
-        }
+        public ReadOnlySet(ISet<T> set) => _set = set;
 
         public bool Contains(T i) => _set.Contains(i);
         public bool IsProperSubsetOf(IEnumerable<T> other) => _set.IsProperSubsetOf(other);

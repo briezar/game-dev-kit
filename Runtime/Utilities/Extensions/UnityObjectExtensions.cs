@@ -318,4 +318,12 @@ public static class UnityObjectExtensions
         layout.SetLayoutVertical();
         layout.SetLayoutHorizontal();
     }
+
+    /// <summary> Sets the parent of a transform without changing its world position </summary>
+    public static void SetParentConvertPosition(this Transform child, Transform parent)
+    {
+        var position = child.position;
+        child.SetParent(parent, worldPositionStays: false);
+        child.position = position;
+    }
 }

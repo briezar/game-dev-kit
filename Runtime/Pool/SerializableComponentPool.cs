@@ -14,7 +14,7 @@ namespace GameDevKit.Pool
         [SerializeField] private bool _instantiateSceneTemplate = true;
 
         private ComponentPool<T> _poolCached;
-        private ComponentPool<T> pool { get => _poolCached ??= new ComponentPool<T>(_template, _parent) { InstantiateSceneTemplate = _instantiateSceneTemplate }; }
+        private ComponentPool<T> pool { get => _poolCached ??= new ComponentPool<T>(_template, _parent, _instantiateSceneTemplate); }
 
         public IReadOnlyCollection<T> ActiveElements => pool.ActiveElements;
         public IReadOnlyCollection<T> InactiveElements => pool.InactiveElements;
