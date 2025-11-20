@@ -31,7 +31,7 @@ namespace GameDevKit.UI
 
 #if UNITY_EDITOR
     [CustomEditor(typeof(TextButton))]
-    public class TextButtonEditor : ButtonEditor
+    internal class TextButtonEditor : ButtonEditor
     {
         SerializedProperty _textProperty;
 
