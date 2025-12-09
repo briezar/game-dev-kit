@@ -6,18 +6,34 @@ using UnityEngine.EventSystems;
 
 namespace GameDevKit.EventSystems
 {
-    public partial class PointerInterceptor : MonoBehaviour
+    public partial class EventSystemHandler : MonoBehaviour
     {
-        private OnPointerEnterInterceptor _pointerEnter;
-        private OnPointerExitInterceptor _pointerExit;
-        private OnPointerDownInterceptor _pointerDown;
-        private OnPointerUpInterceptor _pointerUp;
-        private OnPointerClickInterceptor _click;
-        private OnBeginDragInterceptor _beginDrag;
-        private OnDragInterceptor _drag;
-        private OnEndDragInterceptor _endDrag;
+        private PointerEnterHandler _pointerEnter;
+        private PointerExitHandler _pointerExit;
+        private PointerDownHandler _pointerDown;
+        private PointerUpHandler _pointerUp;
+        private PointerClickHandler _click;
+        private BeginDragHandler _beginDrag;
+        private DragHandler _drag;
+        private EndDragHandler _endDrag;
 
-        private readonly HashSet<PointerHandler> _pointerHandlers = new();
+        private readonly HashSet<HandlerInstance> _pointerHandlers = new();
+
+        private void OnEnable()
+        {
+            foreach (var handler in _pointerHandlers)
+            {
+                handler.enabled = true;
+            }
+        }
+
+        private void OnDisable()
+        {
+            foreach (var handler in _pointerHandlers)
+            {
+                handler.enabled = false;
+            }
+        }
 
         private void OnDestroy()
         {
@@ -68,7 +84,7 @@ namespace GameDevKit.EventSystems
             set => LazyGet(ref _endDrag).OnPointerHandled = value;
         }
 
-        private T LazyGet<T>(ref T backingField) where T : PointerHandler
+        private T LazyGet<T>(ref T backingField) where T : HandlerInstance
         {
             if (backingField == null || backingField.Equals(null))
             {

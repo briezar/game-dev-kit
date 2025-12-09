@@ -15,13 +15,13 @@ namespace GameDevKit
         [SerializeField] private float _referenceWidth = 1080f;
         [SerializeField] private float _referenceHeight = 1920f;
 
-        private Camera _cam;
+        public Camera Camera { get; private set; }
 
         public float BaseOrthographicSize => _referenceHeight / _pixelsPerUnit / 2f;
 
         private void Awake()
         {
-            _cam = GetComponent<Camera>();
+            Camera = GetComponent<Camera>();
         }
 
         private void Start()
@@ -32,11 +32,7 @@ namespace GameDevKit
         [Button]
         public void UpdateCameraSize()
         {
-            if (_cam == null && !TryGetComponent(out _cam))
-            {
-                Debug.LogError("CameraSizer requires a Camera component.");
-                return;
-            }
+            Camera ??= GetComponent<Camera>();
 
             float targetAspect = _referenceWidth / _referenceHeight;
             float windowAspect = (float)Screen.width / Screen.height;
@@ -44,13 +40,13 @@ namespace GameDevKit
             if (windowAspect < targetAspect)
             {
                 // Screen is narrower than reference, match width
-                float differenceInSize = targetAspect / windowAspect;
-                _cam.orthographicSize = BaseOrthographicSize * differenceInSize;
+                float sizeDifference = targetAspect / windowAspect;
+                Camera.orthographicSize = BaseOrthographicSize * sizeDifference;
             }
             else
             {
                 // Screen is equal or wider than reference, match height
-                _cam.orthographicSize = BaseOrthographicSize;
+                Camera.orthographicSize = BaseOrthographicSize;
             }
         }
     }
