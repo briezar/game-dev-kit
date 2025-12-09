@@ -197,8 +197,8 @@ public static class UnityObjectExtensions
         return LazyGet(component, ref backingField, () => component.gameObject.GetOrAddComponent<T>());
     }
 
-    public static RectTransform GetRectTransform(this Component component) => component.transform as RectTransform;
-    public static RectTransform GetRectTransform(this GameObject gameObject) => gameObject.transform as RectTransform;
+    public static RectTransform GetRectTransform(this Component component) => (RectTransform)component.transform;
+    public static RectTransform GetRectTransform(this GameObject gameObject) => (RectTransform)gameObject.transform;
 
     public static void DestroyAllChildren(this Transform parent)
     {

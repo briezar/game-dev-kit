@@ -6,49 +6,49 @@ using UnityEngine.EventSystems;
 
 namespace GameDevKit.EventSystems
 {
-    public partial class PointerInterceptor
+    public partial class EventSystemHandler
     {
-        private abstract class PointerHandler : MonoBehaviour
+        private abstract class HandlerInstance : MonoBehaviour
         {
             public Action<PointerEventData> OnPointerHandled;
         }
 
-        private class OnPointerEnterInterceptor : PointerHandler, IPointerEnterHandler
+        private class PointerEnterHandler : HandlerInstance, IPointerEnterHandler
         {
             void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnPointerExitInterceptor : PointerHandler, IPointerExitHandler
+        private class PointerExitHandler : HandlerInstance, IPointerExitHandler
         {
             void IPointerExitHandler.OnPointerExit(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnPointerDownInterceptor : PointerHandler, IPointerDownHandler
+        private class PointerDownHandler : HandlerInstance, IPointerDownHandler
         {
             void IPointerDownHandler.OnPointerDown(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnPointerUpInterceptor : PointerHandler, IPointerUpHandler
+        private class PointerUpHandler : HandlerInstance, IPointerUpHandler
         {
             void IPointerUpHandler.OnPointerUp(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnPointerClickInterceptor : PointerHandler, IPointerClickHandler
+        private class PointerClickHandler : HandlerInstance, IPointerClickHandler
         {
             void IPointerClickHandler.OnPointerClick(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnBeginDragInterceptor : PointerHandler, IBeginDragHandler
+        private class BeginDragHandler : HandlerInstance, IBeginDragHandler
         {
             void IBeginDragHandler.OnBeginDrag(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnDragInterceptor : PointerHandler, IDragHandler
+        private class DragHandler : HandlerInstance, IDragHandler
         {
             void IDragHandler.OnDrag(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
 
-        private class OnEndDragInterceptor : PointerHandler, IEndDragHandler
+        private class EndDragHandler : HandlerInstance, IEndDragHandler
         {
             void IEndDragHandler.OnEndDrag(PointerEventData eventData) => OnPointerHandled?.Invoke(eventData);
         }
