@@ -78,7 +78,7 @@ namespace GameDevKit.UI
             transform.localScale = _originalScale;
         }
 
-        public void OnPointerDown(PointerEventData eventData)
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
         {
             if (_selectable && !_selectable.interactable) { return; }
 
@@ -88,11 +88,11 @@ namespace GameDevKit.UI
 
             OnPress?.Invoke();
         }
-        public void OnPointerUp(PointerEventData eventData)
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
         {
-            OnPointerExit(eventData);
+            ((IPointerExitHandler)this).OnPointerExit(eventData);
         }
-        public void OnPointerClick(PointerEventData eventData)
+        void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
             if (_selectable && !_selectable.interactable) { return; }
 
@@ -100,7 +100,7 @@ namespace GameDevKit.UI
             Scale(true);
             OnRelease?.Invoke();
         }
-        public void OnPointerExit(PointerEventData eventData)
+        void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
         {
             if (_pressed && _scaleUpOnPointerExit) { Scale(true); }
 

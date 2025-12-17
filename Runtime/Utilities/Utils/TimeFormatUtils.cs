@@ -94,12 +94,3 @@ public interface ITimeSpanFormatter
     });
 
 }
-
-public static class TimeFormatUtils
-{
-    /// <inheritdoc cref="ITimeSpanFormatter.DH_HM_MS" />
-    public static string DH_HM_MS(TimeSpan duration) => ITimeSpanFormatter.DH_HM_MS.Format(duration);
-
-    /// <inheritdoc cref="ITimeSpanFormatter.HMS" />
-    public static string HMS(TimeSpan duration) => ITimeSpanFormatter.HMS.Format(duration);
-}

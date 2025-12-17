@@ -64,12 +64,6 @@ public static class GeneralUtils
         return spriteState;
     }
 
-    public static T[] GetEnums<T>() where T : Enum
-    {
-        var array = (T[])Enum.GetValues(typeof(T));
-        return array;
-    }
-
     public static void SimulateClick(GameObject target)
     {
         var pointerEventData = new PointerEventData(EventSystem.current);

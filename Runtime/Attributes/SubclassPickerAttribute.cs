@@ -1,8 +1,4 @@
-using System.Collections;
 using UnityEngine;
-
-#if UNITY_EDITOR
-#endif
 
 namespace GameDevKit.Attributes
 {
@@ -11,12 +7,6 @@ namespace GameDevKit.Attributes
     /// </summary>
     public class SubclassPickerAttribute : PropertyAttribute
     {
-        public SubclassPickerAttribute()
-        {
-
-        }
+        public bool IgnoreUnityTypes = true;
     }
-
-#if UNITY_EDITOR
-#endif
 }

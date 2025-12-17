@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GameDevKit
+namespace GameDevKit.Comparers
 {
     public class ChainComparer<T> : IComparer<T>
     {

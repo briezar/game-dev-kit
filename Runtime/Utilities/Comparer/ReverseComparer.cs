@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GameDevKit
+namespace GameDevKit.Comparers
 {
     public class ReverseComparer<T> : IComparer<T>
     {

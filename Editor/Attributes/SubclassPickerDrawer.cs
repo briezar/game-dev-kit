@@ -79,6 +79,11 @@ namespace GameDevKit.Editor.Attributes
             var currentType = property.managedReferenceValue?.GetType();
             foreach (Type derivedType in GetDerivedTypes(GetBaseType()))
             {
+                if (attribute is SubclassPickerAttribute subclassPickerAttribute && subclassPickerAttribute.IgnoreUnityTypes)
+                {
+                    if (derivedType.Implements<UnityEngine.Object>()) { continue; }
+                }
+
                 menu.AddItem(new(ObjectNames.NicifyVariableName(derivedType.Name)), currentType == derivedType, () =>
                 {
                     // Supports multi-object editing

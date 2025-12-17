@@ -11,7 +11,7 @@ public static class DropdownUtils
     {
         dropdown.ClearOptions();
 
-        var enumOptions = GeneralUtils.GetEnums<T>();
+        var enumOptions = EnumUtils.GetEnums<T>();
         var options = Array.ConvertAll(enumOptions, (input) => input.ToString());
 
         dropdown.AddOptions(new List<string>(options));
