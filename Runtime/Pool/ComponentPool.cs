@@ -36,20 +36,20 @@ namespace GameDevKit.Pool
         public IReadOnlyCollection<T> ActiveElements => _activeSet;
         public IReadOnlyCollection<T> InactiveElements => _inactiveStack;
 
-        public readonly bool InstantiateSceneTemplate;
+        public readonly bool EnsureSceneTemplate;
 
         /// <summary> Editing this can affect prefab data if template is a prefab!  </summary>
         public T OriginalTemplate => _template;
 
         /// <summary> 
         /// Editing this will affect all subsequent Get() calls. Be careful! Use this to set default values. <br/>
-        /// This can also affect prefab data if template is a prefab and <see cref="InstantiateSceneTemplate"/> is false.
+        /// This can also affect prefab data if template is a prefab and <see cref="EnsureSceneTemplate"/> is false.
         /// </summary>
         public T Template
         {
             get
             {
-                if (!InstantiateSceneTemplate) { return _template; }
+                if (!EnsureSceneTemplate) { return _template; }
                 if (_sceneTemplate != null) { return _sceneTemplate; }
 
                 _sceneTemplate = _template.IsPrefab() ? Object.Instantiate(_template, Container) : _template;
@@ -66,13 +66,13 @@ namespace GameDevKit.Pool
 
         private T _sceneTemplate;
 
-        public ComponentPool(T template, Transform container, bool instantiateSceneTemplate = true)
+        public ComponentPool(T template, Transform container, bool ensureSceneTemplate = true)
         {
             _template = template;
             Container = container;
-            InstantiateSceneTemplate = instantiateSceneTemplate;
+            EnsureSceneTemplate = ensureSceneTemplate;
 
-            if (instantiateSceneTemplate)
+            if (ensureSceneTemplate)
             {
                 Template.gameObject.SetActive(false);
             }

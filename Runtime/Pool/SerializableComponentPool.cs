@@ -10,11 +10,11 @@ namespace GameDevKit.Pool
         [SerializeField] private T _template;
         [SerializeField] private Transform _parent;
 
-        [Tooltip("If true and template is a prefab, will instantiate a scene template from the prefab, then pool from the scene template. If false, will pool from the prefab. This is useful for altering the template in the scene without affecting the prefab.")]
-        [SerializeField] private bool _instantiateSceneTemplate = true;
+        [Tooltip("If template is a prefab outside of a scene, will instantiate a scene template from the prefab, then pool from the scene template. This is useful for altering the template in the scene without affecting the prefab.")]
+        [SerializeField] private bool _ensureSceneTemplate = true;
 
         private ComponentPool<T> _poolCached;
-        private ComponentPool<T> pool { get => _poolCached ??= new ComponentPool<T>(_template, _parent, _instantiateSceneTemplate); }
+        private ComponentPool<T> pool { get => _poolCached ??= new ComponentPool<T>(_template, _parent, _ensureSceneTemplate); }
 
         public IReadOnlyCollection<T> ActiveElements => pool.ActiveElements;
         public IReadOnlyCollection<T> InactiveElements => pool.InactiveElements;

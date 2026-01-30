@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GameDevKit
 {
-    public abstract class ImprovedBehaviour : MonoBehaviour
+    public abstract class AdvancedBehaviour : MonoBehaviour
     {
         // Leaving this as protected instead of private to warn inheriting classes
         protected void OnEnable()

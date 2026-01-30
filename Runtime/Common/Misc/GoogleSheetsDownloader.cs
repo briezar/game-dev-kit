@@ -102,42 +102,4 @@ namespace GameDevKit
             }
         }
     }
-
-    public enum ExcelColumn
-    {
-        // Starts at 0
-        A = 'A' - 65,
-        B = 'B' - 65,
-        C = 'C' - 65,
-        D = 'D' - 65,
-        E = 'E' - 65,
-        F = 'F' - 65,
-        G = 'G' - 65,
-        H = 'H' - 65,
-        I = 'I' - 65,
-        J = 'J' - 65,
-        K = 'K' - 65,
-        L = 'L' - 65,
-        M = 'M' - 65,
-        N = 'N' - 65,
-        O = 'O' - 65,
-        P = 'P' - 65,
-        Q = 'Q' - 65,
-        R = 'R' - 65,
-        S = 'S' - 65,
-        T = 'T' - 65,
-        U = 'U' - 65,
-        V = 'V' - 65,
-        W = 'W' - 65,
-        X = 'X' - 65,
-        Y = 'Y' - 65,
-        Z = 'Z' - 65,
-        AA = Z + 1,
-        AB = Z + 2,
-        AC = Z + 3,
-        AD = Z + 4,
-        AE = Z + 5,
-        AF = Z + 6,
-        AG = Z + 7,
-    }
 }

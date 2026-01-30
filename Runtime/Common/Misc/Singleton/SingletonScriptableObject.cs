@@ -39,6 +39,9 @@ namespace GameDevKit
         }
     }
 
+    /// <summary>
+    /// Base class for ScriptableObject singletons loaded from Resources folder.  Must have <see cref="ScriptableObjectResourcesPathAttribute"/> defined.
+    /// </summary>
     public abstract class SingletonScriptableObject<T> : ScriptableObject where T : ScriptableObject
     {
         private static T _instance;

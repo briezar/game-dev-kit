@@ -11,10 +11,12 @@ namespace GameDevKit
         [JsonProperty("timestampMs")]
         [SerializeField] private long _timestampMs;
 
-        public static class EditorProps
+#if UNITY_EDITOR
+        internal static class EditorProps
         {
             public static string TimestampMs => nameof(_timestampMs);
         }
+#endif
 
         public static SerializableDate Now => new(DateTimeOffset.Now);
         public static SerializableDate UtcNow => new(DateTimeOffset.UtcNow);
@@ -30,15 +32,15 @@ namespace GameDevKit
         public static implicit operator SerializableDate(DateTimeOffset value) => new(value);
         public static implicit operator SerializableDate(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
 
-        public bool Equals(SerializableDate other) => _timestampMs == other._timestampMs;
-        public override bool Equals(object obj) => obj is SerializableDate other && Equals(other);
+        public readonly bool Equals(SerializableDate other) => _timestampMs == other._timestampMs;
+        public override readonly bool Equals(object obj) => obj is SerializableDate other && Equals(other);
 
-        public override int GetHashCode() => _timestampMs.GetHashCode();
+        public override readonly int GetHashCode() => _timestampMs.GetHashCode();
 
         public static bool operator ==(SerializableDate left, SerializableDate right) => left.Equals(right);
         public static bool operator !=(SerializableDate left, SerializableDate right) => !(left == right);
 
-        public override string ToString() => UtcDate.ToString("o"); // ISO 8601 format, e.g., "2023-10-01T12:34:56.789Z"
+        public override readonly string ToString() => UtcDate.ToString("o"); // ISO 8601 format, e.g., "2023-10-01T12:34:56.789Z"
     }
 
 }
