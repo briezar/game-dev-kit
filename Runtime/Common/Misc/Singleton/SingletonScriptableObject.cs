@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using System.Reflection;
+using System.IO;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -13,11 +14,18 @@ using GameDevKit.Editor;
 
 namespace GameDevKit
 {
+    /// <summary>
+    /// Attribute to specify the relative path (from Assets folder) of a ScriptableObject singleton that inherits from <see cref="SingletonScriptableObject{T}"/>.<br/>
+    /// The asset will be loaded from the Resources folder at runtime, and created/moved there in the editor if it doesn't exist or is found elsewhere.
+    /// The path must contain a "Resources" folder and end with the asset name. For example: "Assets/_Project/Resources/Singletons/MySingleton.asset".
+    /// </summary>
+    
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public class ScriptableObjectResourcesPathAttribute : Attribute
     {
         public readonly string RelativePath;
         public readonly string LoadPath;
+        public readonly string AssetName;
 
         public ScriptableObjectResourcesPathAttribute(string relativePath)
         {
@@ -29,8 +37,8 @@ namespace GameDevKit
             var prefix = relativePath.StartsWith("Assets/", StringComparison.Ordinal) ? "Assets/" : string.Empty;
             var suffix = relativePath.EndsWith(".asset", StringComparison.Ordinal) ? string.Empty : ".asset";
             RelativePath = $"{prefix}{relativePath}{suffix}";
-
             LoadPath = RelativePath.Split("/Resources/")[^1].Replace(".asset", string.Empty);
+            AssetName = Path.GetFileNameWithoutExtension(RelativePath);
         }
 
         public class InvalidPathException : Exception

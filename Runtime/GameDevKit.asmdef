@@ -5,7 +5,6 @@
         "Unity.TextMeshPro",
         "UniTask",
         "PrimeTween.Runtime",
-        "AYellowpaper.SerializedCollections",
         "EditorAttributes"
     ],
     "includePlatforms": [],

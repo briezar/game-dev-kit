@@ -152,4 +152,10 @@ public static class RectTransformExtensions
 
         return ConvertNormalizedToWorldPos(rectTransform, normalizedPos);
     }
+
+    public static Vector3 GetRandomWorldPos(this RectTransform rectTransform)
+    {
+        var randomPoint = rectTransform.rect.GetRandomPosition();
+        return rectTransform.TransformPoint(randomPoint);
+    }
 }

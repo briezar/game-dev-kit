@@ -67,5 +67,59 @@ namespace GameDevKit
             }
             return $"{duration:m'm 's's.'ff}";
         }
+
+        /// <summary> Tries to parse a string into a TimeSpan. Supports standard TimeSpan formats as well as custom formats like "1h 30m", "2d 3h", etc. </summary>
+        public static bool TryParse(string input, out TimeSpan result)
+        {
+            // Try standard TimeSpan.TryParse first
+            if (TimeSpan.TryParse(input, out result))
+            {
+                return true;
+            }
+
+            // Try parsing custom formats like "1h 30m", "2d 3h", etc.
+            try
+            {
+                var parts = input.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var totalMs = 0L;
+
+                foreach (var part in parts)
+                {
+                    if (part.EndsWith("d") && double.TryParse(part.TrimEnd('d'), out var days))
+                    {
+                        totalMs += (long)(days * 86400000);
+                    }
+                    else if (part.EndsWith("h") && double.TryParse(part.TrimEnd('h'), out var hours))
+                    {
+                        totalMs += (long)(hours * 3600000);
+                    }
+                    else if (part.EndsWith("m") && double.TryParse(part.TrimEnd('m'), out var minutes))
+                    {
+                        totalMs += (long)(minutes * 60000);
+                    }
+                    else if (part.EndsWith("s") && double.TryParse(part.TrimEnd('s'), out var seconds))
+                    {
+                        totalMs += (long)(seconds * 1000);
+                    }
+                    else if (part.EndsWith("ms") && double.TryParse(part.TrimEnd('m', 's'), out var milliseconds))
+                    {
+                        totalMs += (long)milliseconds;
+                    }
+                }
+
+                if (totalMs > 0)
+                {
+                    result = TimeSpan.FromMilliseconds(totalMs);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to parse TimeSpan from input: {input}\n{ex}");
+            }
+
+            result = TimeSpan.Zero;
+            return false;
+        }
     }
 }

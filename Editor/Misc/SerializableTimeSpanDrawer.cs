@@ -38,7 +38,7 @@ namespace GameDevKit.Editor
                     Debug.Log($"[SerializableTimeSpan] Parsed as milliseconds: {parsedLong}");
                     durationProp.longValue = parsedLong;
                 }
-                else if (TryParseTimeSpanString(newInput, out var parsedTimeSpan))
+                else if (SerializableTimeSpan.TryParse(newInput, out var parsedTimeSpan))
                 {
                     Debug.Log($"[SerializableTimeSpan] Parsed as TimeSpan: {parsedTimeSpan}");
                     durationProp.longValue = (long)parsedTimeSpan.TotalMilliseconds;
@@ -80,59 +80,6 @@ namespace GameDevKit.Editor
             {
                 return $"{(int)totalDays}d {timeSpan.Hours}h {timeSpan.Minutes}m {timeSpan.Seconds}s";
             }
-        }
-
-        private static bool TryParseTimeSpanString(string input, out TimeSpan result)
-        {
-            // Try standard TimeSpan.TryParse first
-            if (TimeSpan.TryParse(input, out result))
-            {
-                return true;
-            }
-
-            // Try parsing custom formats like "1h 30m", "2d 3h", etc.
-            try
-            {
-                var parts = input.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                var totalMs = 0L;
-
-                foreach (var part in parts)
-                {
-                    if (part.EndsWith("d") && double.TryParse(part.TrimEnd('d'), out var days))
-                    {
-                        totalMs += (long)(days * 86400000);
-                    }
-                    else if (part.EndsWith("h") && double.TryParse(part.TrimEnd('h'), out var hours))
-                    {
-                        totalMs += (long)(hours * 3600000);
-                    }
-                    else if (part.EndsWith("m") && double.TryParse(part.TrimEnd('m'), out var minutes))
-                    {
-                        totalMs += (long)(minutes * 60000);
-                    }
-                    else if (part.EndsWith("s") && double.TryParse(part.TrimEnd('s'), out var seconds))
-                    {
-                        totalMs += (long)(seconds * 1000);
-                    }
-                    else if (part.EndsWith("ms") && double.TryParse(part.TrimEnd('m', 's'), out var milliseconds))
-                    {
-                        totalMs += (long)milliseconds;
-                    }
-                }
-
-                if (totalMs > 0)
-                {
-                    result = TimeSpan.FromMilliseconds(totalMs);
-                    return true;
-                }
-            }
-            catch
-            {
-                // Parsing failed
-            }
-
-            result = TimeSpan.Zero;
-            return false;
         }
     }
 }

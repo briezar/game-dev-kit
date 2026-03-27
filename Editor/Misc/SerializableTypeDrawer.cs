@@ -27,9 +27,9 @@ namespace GameDevKit.Editor
                     Debug.LogWarning($"Type '{selectedType.Name}' is not a valid type based on {nameof(TypeFilterAttribute)}\n{typeFilter.GetFilterInfo()}", property.serializedObject.targetObject);
                 }
 
-                btnStyle.normal.textColor = Color.yellowNice;
-                btnStyle.hover.textColor = Color.yellowNice;
-                btnStyle.active.textColor = Color.yellowNice;
+                btnStyle.normal.textColor = Color.yellow;
+                btnStyle.hover.textColor = Color.yellow;
+                btnStyle.active.textColor = Color.yellow;
             }
 
             position = EditorGUI.PrefixLabel(position, label);
