@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace GameDevKit
 {
+    /// <summary>
+    /// Use <see cref="TypeFilterAttribute"/> to filter types
+    /// </summary>
     [Serializable]
     public struct SerializableType : IEquatable<SerializableType>, IEquatable<Type>
     {

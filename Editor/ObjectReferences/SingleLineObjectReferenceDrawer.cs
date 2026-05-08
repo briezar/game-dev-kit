@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace GameDevKit.Editor.ObjectReferences
 {
+    /// <summary>
+    /// Base class for drawing a single line object reference in the inspector. The derived class should specify the name of the object property to draw by implementing GetObjectName().
+    /// </summary>
     public abstract class SingleLineObjectReferenceDrawer : PropertyDrawer
     {
         private readonly Dictionary<string, SerializedProperty> _cache = new();

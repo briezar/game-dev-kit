@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace GameDevKit
 {
+    /// <summary>
+    /// Attribute to only allow assignment of objects that are or derive from the specified types
+    /// </summary>
     public class TypeFilterAttribute : PropertyAttribute
     {
         public readonly bool AllowAbstract;

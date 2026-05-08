@@ -211,7 +211,7 @@ namespace GameDevKit.Editor
 
         private static List<Type> LoadAllProjectTypes()
         {
-            var excludedAssembliesStartWith = new[] { "Unity", "Mono", "Bee", "System", "Microsoft", "Google", "Firebase" };
+            var excludedAssembliesStartWith = new[] { "Mono", "Bee", "System", "Microsoft", "Google", "Firebase" };
             var excludedAssemblies = new HashSet<string> { "Assembly-CSharp-Editor", "Assembly-CSharp-Editor-firstpass", "mscorlib", "netstandard", "PsdPlugin", "ScriptablePacker" };
             var excludedTypesStartWith = new[] { "$", "<", "UnitySourceGenerated" };
             var excludedTypesContain = new[] { "Editor" };

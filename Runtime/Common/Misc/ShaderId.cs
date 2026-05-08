@@ -22,13 +22,31 @@ namespace GameDevKit
         public static implicit operator ShaderId(string propertyName) => new(propertyName);
     }
 
+    [Serializable]
+    public struct SerializableShaderId
+    {
+        [SerializeField] private string _propertyName;
+
+        private int? _propertyId;
+        public int PropertyId => _propertyId ??= Shader.PropertyToID(_propertyName);
+
+        public SerializableShaderId(string propertyName)
+        {
+            _propertyName = propertyName;
+            _propertyId = Shader.PropertyToID(propertyName);
+        }
+
+        public static implicit operator int(SerializableShaderId hash) => hash.PropertyId;
+        public static implicit operator SerializableShaderId(string propertyName) => new(propertyName);
+    }
+
     public static class ShaderIdExtension
     {
         public static T Get<T>(this IMaterialPropertyReadWrite<T> prop, Renderer renderer) => prop.Get(renderer.material);
         public static void Set<T>(this IMaterialPropertyReadWrite<T> prop, Renderer renderer, T value) => prop.Set(renderer.material, value);
     }
 
-    /// <summary> Wrapper for better context </summary>
+    /// <summary> Shader.PropertyToID wrapper for better context </summary>
     public struct FloatShaderId : IMaterialPropertyReadWrite<float>
     {
         public int PropertyId { get; private set; }
@@ -44,7 +62,7 @@ namespace GameDevKit
         public static implicit operator FloatShaderId(string propertyName) => new(propertyName);
     }
 
-    /// <summary> Wrapper for better context </summary>
+    /// <summary> Shader.PropertyToID wrapper for better context </summary>
     public struct ColorShaderId : IMaterialPropertyReadWrite<Color>
     {
         public int PropertyId { get; private set; }
@@ -60,7 +78,7 @@ namespace GameDevKit
         public static implicit operator ColorShaderId(string propertyName) => new(propertyName);
     }
 
-    /// <summary> Wrapper for better context </summary>
+    /// <summary> Shader.PropertyToID wrapper for better context </summary>
     public struct TextureShaderId : IMaterialPropertyReadWrite<Texture>
     {
         public int PropertyId { get; private set; }
