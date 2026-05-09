@@ -7,7 +7,7 @@ using UnityEngine.Events;
 namespace GameDevKit
 {
     [ExecuteInEditMode]
-    public class GameObjectLifeCycleDelegate : MonoBehaviour
+    public class LifeCycleHook : MonoBehaviour
     {
         public UnityEvent Enabled;
         public UnityEvent Disabled;

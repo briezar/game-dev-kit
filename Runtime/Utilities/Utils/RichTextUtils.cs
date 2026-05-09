@@ -1,11 +1,13 @@
-
 using System;
 using System.Globalization;
 using System.Text;
 using UnityEngine.Pool;
 
-public static class StringUtils
+public static class RichTextUtils
 {
+    public const string RichTextSpriteFormat = "<sprite=\"{0}\" name=\"{1}\">";
+    public static string EvaluateSpriteAsset(string spriteSetName, string spriteName) => string.Format(RichTextSpriteFormat, spriteSetName, spriteName);
+
     /// <summary>
     /// Strip rich text style tags (e.g. &lt;color&gt;) and decode common entities (lt, gt, amp, quot, and numeric)<br/>
     /// Handles quoted attributes (won't treat '>' inside quotes as tag end).

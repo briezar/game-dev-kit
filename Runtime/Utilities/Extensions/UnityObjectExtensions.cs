@@ -28,7 +28,7 @@ namespace SpecializedExtensions
             }
             else
             {
-                gameObject.AddComponent<GameObjectLifeCycleDelegate>().Enabled.AddListener(OverrideSorting);
+                gameObject.AddComponent<LifeCycleHook>().Enabled.AddListener(OverrideSorting);
             }
 
             if (allowClick) { gameObject.GetOrAddComponent<GraphicRaycaster>(); }

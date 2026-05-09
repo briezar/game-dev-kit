@@ -4,7 +4,9 @@
     "references": [
         "GameDevKit",
         "Unity.TextMeshPro",
-        "Unity.TextMeshPro.Editor"
+        "Unity.TextMeshPro.Editor",
+        "UniTask",
+        "EditorAttributes"
     ],
     "includePlatforms": [
         "Editor"
