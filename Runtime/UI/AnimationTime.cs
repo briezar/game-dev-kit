@@ -1,5 +1,5 @@
 
-namespace GameDevKit
+namespace GameDevKit.UI
 {
     public static class AnimationTime
     {

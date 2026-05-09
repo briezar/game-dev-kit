@@ -6,20 +6,20 @@ using UnityEngine;
 namespace GameDevKit
 {
     [Serializable]
-    public struct IntAmount<T>
+    public struct FloatAmount<T>
     {
         public T item;
-        public int amount;
+        public float amount;
 
-        public IntAmount(T item, int amount = 0) => (this.item, this.amount) = (item, amount);
+        public FloatAmount(T item, float amount = 0) => (this.item, this.amount) = (item, amount);
     }
 
     [Serializable]
-    public struct IntRandomAmount<T>
+    public struct FloatRandomAmount<T>
     {
-        public IntWeightedAmount<T>[] items;
+        public FloatWeightedAmount<T>[] items;
 
-        public readonly IntAmount<T> GetRandomItem()
+        public readonly FloatAmount<T> GetRandomItem()
         {
             var randomItem = GeneralUtils.GetWeightedRandom(items, (item) => item.weight);
             return new(randomItem.item, randomItem.amount);
@@ -27,10 +27,10 @@ namespace GameDevKit
     }
 
     [Serializable]
-    public struct IntWeightedAmount<T>
+    public struct FloatWeightedAmount<T>
     {
         public T item;
-        public int amount;
+        public float amount;
         public float weight;
     }
 }
