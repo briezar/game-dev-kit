@@ -320,7 +320,7 @@ public static class UnityObjectExtensions
     }
 
     /// <summary> Sets the parent of a transform without changing its world position </summary>
-    public static void SetParentConvertPosition(this Transform child, Transform parent)
+    public static void SetParentKeepPosition(this Transform child, Transform parent)
     {
         var position = child.position;
         child.SetParent(parent, worldPositionStays: false);

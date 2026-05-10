@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GameDevKit.Editor.Collections
 {
     [CustomPropertyDrawer(typeof(LookupList<,>), true)]
-    public class LookupListDrawer : SingleLineObjectReferenceDrawer
+    public class LookupListDrawer : SingleLineDrawer
     {
         protected override string GetObjectName() => "_values";
     }

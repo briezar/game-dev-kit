@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using EditorAttributes;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 
 namespace GameDevKit.Pool
 {
@@ -73,7 +74,8 @@ namespace GameDevKit.Pool
         private static Transform GetContainer(T template)
         {
             using var _ = ListPool<GameObject>.Get(out var rootObjects);
-            template.gameObject.scene.GetRootGameObjects(rootObjects);
+            var scene = template.IsPrefab() ? SceneManager.GetActiveScene() : template.gameObject.scene;
+            scene.GetRootGameObjects(rootObjects);
             var poolName = GetPoolName(template);
             var containerObj = rootObjects.Find(obj => obj.name.FastOrdinalEquals(poolName));
             if (containerObj == null)
@@ -81,7 +83,7 @@ namespace GameDevKit.Pool
                 containerObj = new GameObject(poolName);
                 if (containerObj.scene != template.gameObject.scene)
                 {
-                    UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(containerObj, template.gameObject.scene);
+                    SceneManager.MoveGameObjectToScene(containerObj, scene);
                 }
             }
             return containerObj.transform;

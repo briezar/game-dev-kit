@@ -9,10 +9,8 @@ public static class ReflectionExtensions
     public static bool Implements<T>(this Type source) => typeof(T).IsAssignableFrom(source);
     public static bool Implements(this Type source, Type other) => other.IsAssignableFrom(source);
 
-    public static bool HasAttribute<TAttribute>(this object source, bool inherit = true) where TAttribute : Attribute
-    {
-        return source.GetType().IsDefined(typeof(TAttribute), inherit);
-    }
+    public static bool HasAttribute<TAttribute>(this object source, bool inherit = true) where TAttribute : Attribute => HasAttribute<TAttribute>(source.GetType(), inherit);
+    public static bool HasAttribute<TAttribute>(this Type type, bool inherit = true) where TAttribute : Attribute => type.IsDefined(typeof(TAttribute), inherit);
 
     public static bool TryGetAttribute<TAttribute>(this object source, out TAttribute attribute, bool inherit = true) where TAttribute : Attribute
     {
