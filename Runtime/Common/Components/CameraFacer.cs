@@ -7,11 +7,9 @@ namespace GameDevKit
     {
         public enum FacingMode
         {
-            [Tooltip("Faces camera directly (world UI, sprites)")]
-            Billboard,
-
-            [Tooltip("Rotates toward camera on Y only (signs, props)")]
-            Upright,
+            Billboard,      // Faces camera directly (world UI, sprites)
+            UprightToward,  // Y-only rotation toward camera position (perspective signs)
+            UprightForward, // Y-only rotation matching camera forward (isometric signs)
         }
 
         [HelpBox("Defaults to Camera with Tag if not assigned")]
@@ -23,24 +21,21 @@ namespace GameDevKit
         public FacingMode Mode = FacingMode.Billboard;
         public Vector3 Offset;
 
+        [Tooltip("Applied after facing, use to correct objects that face backwards")]
+        public float RotationOffset = 0f;
+
         public bool FaceOnEnable = true;
         public bool UseUpdate = true;
 
         protected override void OnStartOrEnable()
         {
-            if (TargetCamera == null)
-            {
-                TargetCamera = Camera.allCameras.Find(c => c.CompareTag(Tag));
-            }
+            if (TargetCamera == null) { TargetCamera = Camera.allCameras.Find(c => c.CompareTag(Tag)); }
             if (FaceOnEnable) { FaceCamera(); }
         }
 
         private void LateUpdate()
         {
-            if (UseUpdate)
-            {
-                FaceCamera();
-            }
+            if (UseUpdate) { FaceCamera(); }
         }
 
         [Button]
@@ -54,21 +49,24 @@ namespace GameDevKit
                     transform.rotation = Quaternion.LookRotation(TargetCamera.transform.forward);
                     break;
 
-                case FacingMode.Upright:
-                    // Project the direction to the camera onto the XZ plane so the
-                    // object only pivots on Y and never tilts (works for both
-                    // perspective and isometric cameras).
-                    Vector3 toCamera = TargetCamera.transform.position - transform.position;
+                case FacingMode.UprightToward:
+                    // Points toward camera position — varies per world position (perspective)
+                    var toCamera = TargetCamera.transform.position - transform.position;
                     toCamera.y = 0f;
+                    if (toCamera.sqrMagnitude > 0.001f) { transform.rotation = Quaternion.LookRotation(-toCamera.normalized); }
+                    break;
 
-                    if (toCamera.sqrMagnitude > 0.001f)
-                    {
-                        transform.rotation = Quaternion.LookRotation(-toCamera.normalized);
-                    }
+                case FacingMode.UprightForward:
+                    // Mirrors camera forward on XZ — identical for all objects (isometric)
+                    var forward = TargetCamera.transform.forward;
+                    forward.y = 0f;
+                    if (forward.sqrMagnitude > 0.001f) { transform.rotation = Quaternion.LookRotation(forward.normalized); }
                     break;
             }
 
-            transform.eulerAngles += Offset;
+            var euler = transform.eulerAngles + Offset;
+            euler.y += RotationOffset;
+            transform.eulerAngles = euler;
         }
     }
 }
