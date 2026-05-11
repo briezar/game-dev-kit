@@ -5,7 +5,7 @@ namespace GameDevKit.NewtonsoftJson
 {
     public static class JsonSerializerSettingsPresets
     {
-        public static JsonSerializerSettings Minimized => new()
+        public static JsonSerializerSettings Minimized = new()
         {
             ContractResolver = new ExcludeGetOnlyPropertiesResolver(),
             NullValueHandling = NullValueHandling.Ignore,
@@ -13,7 +13,7 @@ namespace GameDevKit.NewtonsoftJson
             // TypeNameHandling = TypeNameHandling.Auto
         };
 
-        public static JsonSerializerSettings Explicit => new()
+        public static JsonSerializerSettings Explicit = new()
         {
             ContractResolver = new ExcludeGetOnlyPropertiesResolver(),
             NullValueHandling = NullValueHandling.Include,

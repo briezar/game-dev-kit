@@ -37,8 +37,7 @@ namespace GameDevKit
         {
             if (TargetCamera == null) { return; }
 
-            var targetRotation = transform.position - TargetCamera.transform.position;
-            transform.rotation = Quaternion.LookRotation(targetRotation);
+            transform.rotation = Quaternion.LookRotation(TargetCamera.transform.forward);
         }
     }
 }

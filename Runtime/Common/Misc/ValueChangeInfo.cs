@@ -5,6 +5,15 @@ using System.Collections.Generic;
 namespace GameDevKit
 {
     [Serializable]
+    public struct ValueChangeInfo<T>
+    {
+        public T previous;
+        public T current;
+
+        public ValueChangeInfo(T previous, T current) => (this.previous, this.current) = (previous, current);
+    }
+
+    [Serializable]
     public struct IntChangeInfo
     {
         public int previous;

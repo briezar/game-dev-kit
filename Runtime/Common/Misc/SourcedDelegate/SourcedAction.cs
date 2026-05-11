@@ -6,10 +6,7 @@ namespace GameDevKit
     {
         public void Invoke()
         {
-            foreach (var sourcedAction in _delegates.Values)
-            {
-                sourcedAction?.Invoke();
-            }
+            foreach (var action in GetInvocationList()) { action?.Invoke(); }
         }
     }
 
@@ -17,10 +14,7 @@ namespace GameDevKit
     {
         public void Invoke(T arg)
         {
-            foreach (var sourcedAction in _delegates.Values)
-            {
-                sourcedAction?.Invoke(arg);
-            }
+            foreach (var action in GetInvocationList()) { action?.Invoke(arg); }
         }
     }
 
@@ -28,10 +22,7 @@ namespace GameDevKit
     {
         public void Invoke(T1 arg1, T2 arg2)
         {
-            foreach (var sourcedAction in _delegates.Values)
-            {
-                sourcedAction?.Invoke(arg1, arg2);
-            }
+            foreach (var action in GetInvocationList()) { action?.Invoke(arg1, arg2); }
         }
     }
 }

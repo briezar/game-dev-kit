@@ -23,5 +23,8 @@ namespace GameDevKit
             }
         }
 
+        public static implicit operator ObservableFloat(float value) => new() { _value = value };
+        public static implicit operator float(ObservableFloat value) => value.Value;
+
     }
 }

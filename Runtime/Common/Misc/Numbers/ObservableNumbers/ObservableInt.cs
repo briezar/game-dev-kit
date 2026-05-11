@@ -23,5 +23,8 @@ namespace GameDevKit
             }
         }
 
+        public static implicit operator ObservableInt(int value) => new() { _value = value };
+        public static implicit operator int(ObservableInt value) => value.Value;
+
     }
 }

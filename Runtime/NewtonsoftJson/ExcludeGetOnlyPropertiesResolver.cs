@@ -11,8 +11,15 @@ namespace GameDevKit.NewtonsoftJson
         {
             var property = base.CreateProperty(member, memberSerialization);
             if (property.HasMemberAttribute) { return property; }
-            if (!property.Writable) { return null; }
             if (typeof(Delegate).IsAssignableFrom(property.PropertyType)) { return null; }
+            if (member is PropertyInfo propertyInfo)
+            {
+                var hasSetter = propertyInfo.GetSetMethod(true) != null;
+                if (!hasSetter)
+                {
+                    return null; // This catches { get; } and => 'expression bodied' properties
+                }
+            }
             return property;
         }
     }
