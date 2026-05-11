@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEditor.UI;
-
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.UI;
 #endif
 
 namespace GameDevKit.UI
