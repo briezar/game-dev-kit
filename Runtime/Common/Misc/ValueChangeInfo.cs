@@ -11,6 +11,7 @@ namespace GameDevKit
         public T current;
 
         public ValueChangeInfo(T previous, T current) => (this.previous, this.current) = (previous, current);
+        public ValueChangeInfo(T current) => (this.previous, this.current) = (current, current);
     }
 
     [Serializable]
@@ -22,6 +23,7 @@ namespace GameDevKit
         public readonly int Diff => current - previous;
 
         public IntChangeInfo(int previous, int current) => (this.previous, this.current) = (previous, current);
+        public IntChangeInfo(int current) => (this.previous, this.current) = (current, current);
     }
 
     [Serializable]
@@ -33,5 +35,6 @@ namespace GameDevKit
         public readonly float Diff => current - previous;
 
         public FloatChangeInfo(float previous, float current) => (this.previous, this.current) = (previous, current);
+        public FloatChangeInfo(float current) => (this.previous, this.current) = (current, current);
     }
 }
