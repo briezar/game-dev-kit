@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
 using GameDevKit.Attributes;
@@ -55,6 +56,9 @@ namespace GameDevKit.Editor.AppBuild
                 Debug.LogError("Build path is null or empty. Cannot open build folder.", this);
                 return;
             }
+
+            var directoryInfo = Directory.CreateDirectory(Path.Combine(Application.dataPath, "..", buildPath));
+            Debug.Log(directoryInfo.FullName);
 
             EditorUtility.RevealInFinder(buildPath);
         }

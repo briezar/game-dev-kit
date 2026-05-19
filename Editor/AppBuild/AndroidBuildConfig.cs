@@ -30,21 +30,10 @@ namespace GameDevKit.Editor.AppBuild
         public override BuildPlayerOptions GetBuildPlayerOptions()
         {
             AndroidBuildSettings.Apply();
-
-            var buildPlayerOptions = new BuildPlayerOptions
-            {
-                scenes = GetScenes(),
-                locationPathName = GetBuildPath(),
-                targetGroup = BuildTargetGroup,
-                target = BuildTarget,
-                options = BuildOptions,
-                extraScriptingDefines = ExtraScriptingDefines
-            };
-
-            return buildPlayerOptions;
+            return base.GetBuildPlayerOptions();
         }
 
-        public override string GetExtension() => AndroidBuildSettings.BuildAppBundle ? "aab" : "apk";
+        public override string GetExtension() => AndroidBuildSettings.BuildAppBundle ? ".aab" : ".apk";
     }
 
     [Serializable]

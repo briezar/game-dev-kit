@@ -27,7 +27,7 @@ namespace GameDevKit.Editor.CodeGenerator
         public string GetFilePath()
         {
             var assetPath = filePathFromAssetsFolder.EndsWith(fileName) ? filePathFromAssetsFolder : Path.Combine(filePathFromAssetsFolder, fileName);
-            return Path.Combine(Application.dataPath.Replace("Assets", ""), assetPath);
+            return Path.Combine(Application.dataPath, "..", assetPath);
         }
     }
 

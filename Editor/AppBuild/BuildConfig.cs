@@ -10,17 +10,30 @@ namespace GameDevKit.Editor.AppBuild
         public string BuildFolder = "Builds";
         public string[] ExtraScriptingDefines;
         public BuildOptions BuildOptions;
-        public BuildTarget BuildTarget;
         public BuildTargetGroup BuildTargetGroup;
+        public BuildTarget BuildTarget;
         public string BuildSuffix;
 
         public virtual UniTask PreBuildAsync() => UniTask.CompletedTask;
         public virtual UniTask PostBuildAsync() => UniTask.CompletedTask;
 
-        public abstract BuildPlayerOptions GetBuildPlayerOptions();
+        public virtual BuildPlayerOptions GetBuildPlayerOptions()
+        {
+            var buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = GetScenes(),
+                locationPathName = GetBuildPath(),
+                targetGroup = BuildTargetGroup,
+                target = BuildTarget,
+                options = BuildOptions,
+                extraScriptingDefines = ExtraScriptingDefines
+            };
 
-        public abstract string GetExtension();
-        public virtual string GetBuildPath() => $"{BuildFolder}/{BuildTarget}/{Application.productName}{BuildSuffix}.{GetExtension()}";
+            return buildPlayerOptions;
+        }
+
+        public virtual string GetExtension() => "";
+        public virtual string GetBuildPath() => $"{BuildFolder}/{BuildTarget}/{Application.productName}{BuildSuffix}{GetExtension()}";
 
         protected static string[] GetScenes() => EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
     }
