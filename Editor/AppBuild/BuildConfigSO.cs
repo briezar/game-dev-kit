@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace GameDevKit.Editor.AppBuild
 {
-    [CreateAssetMenu(menuName = "AppBuild/BuildConfig", order = 0)]
+    [CreateAssetMenu(menuName = "GameDevKit/AppBuild/BuildConfig")]
     public class BuildConfigSO : ScriptableObject
     {
         [SerializeReference, SubclassPicker]

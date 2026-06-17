@@ -37,11 +37,10 @@ namespace GameDevKit.UI
             GoTo(panel, animate);
         }
 
-        protected virtual void AnimatePanelTransition(T panel)
+        protected virtual void AnimatePanelTransition(T panelOut, T panelIn)
         {
-            var movementType = CurrentPanel.PanelIndex < panel.PanelIndex ? TransitionDirection.RightToLeft : TransitionDirection.LeftToRight;
-            CurrentPanel.TransitionOut(movementType);
-            panel.TransitionIn(movementType);
+            panelOut.TransitionOut();
+            panelIn.TransitionIn();
         }
 
         public void GoTo(int index, bool animate = true) => GoTo(_panels[index], animate);
@@ -50,7 +49,7 @@ namespace GameDevKit.UI
             var isSamePanel = CurrentPanel != null && panel == CurrentPanel;
             if (animate && !isSamePanel)
             {
-                AnimatePanelTransition(panel);
+                AnimatePanelTransition(CurrentPanel, panel);
             }
 
             panel.OnShow();
@@ -63,10 +62,6 @@ namespace GameDevKit.UI
             OnPanelChanged?.Invoke(CurrentPanel);
         }
 
-        public U Get<U>() where U : T
-        {
-            var panel = _panels.Find(match => match is U);
-            return panel as U;
-        }
+        public U Get<U>() where U : T => _panels.Find(match => match is U) as U;
     }
 }

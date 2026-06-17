@@ -15,7 +15,7 @@ namespace GameDevKit
     public class CameraAspectRatioAdapter : MonoBehaviour
     {
 #if UNITY_CINEMACHINE
-        [SerializeField] private CinemachineCamera _vCam;
+        [SerializeField] private CinemachineCamera _cineCam;
 #endif
 
         [SerializeField] private Camera _cam;
@@ -33,7 +33,7 @@ namespace GameDevKit
         private void Reset()
         {
 #if UNITY_CINEMACHINE
-            _vCam = GetComponentInChildren<CinemachineCamera>();
+            _cineCam = GetComponentInChildren<CinemachineCamera>();
 #endif
             _cam = GetComponentInChildren<Camera>();
         }
@@ -72,9 +72,9 @@ namespace GameDevKit
         private float GetCameraOrthoSize()
         {
 #if UNITY_CINEMACHINE
-            if (_vCam != null)
+            if (_cineCam != null)
             {
-                return _vCam.Lens.OrthographicSize;
+                return _cineCam.Lens.OrthographicSize;
             }
 #endif
 
@@ -89,9 +89,9 @@ namespace GameDevKit
         private void SetCameraOrthoSize(float size)
         {
 #if UNITY_CINEMACHINE
-            if (_vCam != null)
+            if (_cineCam != null)
             {
-                _vCam.Lens.OrthographicSize = size;
+                _cineCam.Lens.OrthographicSize = size;
             }
 #endif
 

@@ -6,7 +6,8 @@
         "UniTask",
         "PrimeTween.Runtime",
         "EditorAttributes",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "AYellowpaper.SerializedCollections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
