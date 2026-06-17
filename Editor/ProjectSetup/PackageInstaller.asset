@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5d63a839afbb7040aa6ac501a7dfb9f, type: 3}
+  m_Name: PackageInstaller
+  m_EditorClassIdentifier: 
+  _dependencies:
+  - packageId: com.cysharp.unitask
+    sourceType: 0
+    gitUrl: https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []
+  - packageId: com.v0lt.editor-attributes
+    sourceType: 0
+    gitUrl: https://github.com/v0lt13/EditorAttributes.git
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []
+  - packageId: com.kyrylokuzyk.primetween
+    sourceType: 1
+    gitUrl: 
+    scopedRegistry:
+      name: npm
+      url: https://registry.npmjs.org/
+      scopes:
+      - com.kyrylokuzyk
+  _essentialPackages:
+  - packageId: com.yasirkula.assetusagedetector
+    sourceType: 0
+    gitUrl: https://github.com/yasirkula/UnityAssetUsageDetector.git
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []
+  - packageId: com.yasirkula.ingamedebugconsole
+    sourceType: 0
+    gitUrl: https://github.com/yasirkula/UnityIngameDebugConsole.git
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []

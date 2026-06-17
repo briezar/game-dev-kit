@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace GameDevKit.Editor
@@ -12,18 +10,6 @@ namespace GameDevKit.Editor
     public static class ProjectSetup
     {
         private const string MenuItemPath = EditorConstants.MenuItemPath + "Project Setup/";
-
-        [MenuItem(MenuItemPath + "Install Essential Packages")]
-        public static void InstallEssentialPackages()
-        {
-            PackagesHelper.InstallPackages(
-                "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-                "https://github.com/v0lt13/EditorAttributes.git",
-                "https://github.com/yasirkula/UnityAssetUsageDetector.git",
-                "https://github.com/yasirkula/UnityIngameDebugConsole.git",
-                "com.unity.nuget.newtonsoft-json"
-            );
-        }
 
         [MenuItem(MenuItemPath + "Create Folder Structure")]
         public static void CreateFolderStructure()
@@ -62,40 +48,6 @@ namespace GameDevKit.Editor
 
             var msg = $"Added compiler suppressions through {cscPath}:\n";
             Debug.Log(msg + argumentMap.JoinToString("{0} ({1})"));
-        }
-
-        private static class PackagesHelper
-        {
-            private static readonly Queue<string> packagesToInstall = new();
-
-            public static void InstallPackages(params string[] packages)
-            {
-                foreach (var package in packages)
-                {
-                    packagesToInstall.Enqueue(package);
-                }
-
-                if (packagesToInstall.Count > 0)
-                {
-                    StartNextPackageInstallation();
-                }
-            }
-
-            private static async void StartNextPackageInstallation()
-            {
-                var request = Client.Add(packagesToInstall.Dequeue());
-
-                while (!request.IsCompleted) await Task.Delay(100);
-
-                if (request.Status == StatusCode.Success) Debug.Log("Installed: " + request.Result.packageId);
-                else if (request.Status >= StatusCode.Failure) Debug.LogError(request.Error.message);
-
-                if (packagesToInstall.Count > 0)
-                {
-                    await Task.Delay(100);
-                    StartNextPackageInstallation();
-                }
-            }
         }
 
         private static class AssetsDirectory
@@ -167,10 +119,7 @@ namespace GameDevKit.Editor
                 }
             }
 
-            private static string ToRelativePath(params string[] paths)
-            {
-                return Path.Combine(Application.dataPath, Path.Combine(paths));
-            }
+            private static string ToRelativePath(params string[] paths) => Path.Combine(Application.dataPath, Path.Combine(paths));
 
         }
     }
