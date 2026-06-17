@@ -6,7 +6,7 @@ using UnityEngine.Events;
 
 namespace GameDevKit.Pool
 {
-    public class PoolableObject : MonoBehaviour, IObjectPoolEventReceiver
+    public class PoolableObject : MonoBehaviour, IPoolableObject
     {
         [field: SerializeField] public ComponentCache ComponentCache { get; private set; }
 

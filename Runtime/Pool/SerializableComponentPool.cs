@@ -26,7 +26,7 @@ namespace GameDevKit.Pool
         public T Get(bool activate = true) => pool.Get(activate);
         public void Release(T element, bool resetTransform = true) => pool.Release(element, resetTransform);
         public void ReleaseAll(bool resetTransform = true) => pool.ReleaseAll(resetTransform);
-        public void Clear() => pool.Clear();
+        public void ClearAll() => pool.ClearAll();
         public void Prepare(int minCount) => pool.Prepare(minCount);
     }
 }

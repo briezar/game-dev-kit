@@ -25,6 +25,11 @@ namespace GameDevKit
             if (_delegates.TryGetValue(source, out var action)) { action?.Invoke(LatestValue); }
         }
 
+        public void InvokeSource(object source, T value)
+        {
+            if (_delegates.TryGetValue(source, out var action)) { action?.Invoke(value); }
+        }
+
         public void Invoke(T arg)
         {
             LatestValue = arg;
@@ -42,6 +47,14 @@ namespace GameDevKit
             if (_delegates.TryGetValue(source, out var action))
             {
                 action?.Invoke(LatestValue.arg1, LatestValue.arg2);
+            }
+        }
+
+        public void InvokeSource(object source, T1 arg1, T2 arg2)
+        {
+            if (_delegates.TryGetValue(source, out var action))
+            {
+                action?.Invoke(arg1, arg2);
             }
         }
 

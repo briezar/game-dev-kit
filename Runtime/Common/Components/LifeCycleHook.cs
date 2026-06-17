@@ -14,24 +14,12 @@ namespace GameDevKit
         public UnityEvent Started;
         public UnityEvent Destroyed;
 
-        private void OnEnable()
-        {
-            Enabled?.Invoke();
-        }
+        private void OnEnable() => Enabled?.Invoke();
 
-        private void OnDisable()
-        {
-            Disabled?.Invoke();
-        }
+        private void OnDisable() => Disabled?.Invoke();
 
-        private void Start()
-        {
-            Started?.Invoke();
-        }
+        private void Start() => Started?.Invoke();
 
-        private void OnDestroy()
-        {
-            Destroyed?.Invoke();
-        }
+        private void OnDestroy() => Destroyed?.Invoke();
     }
 }

@@ -5,7 +5,8 @@
         "Unity.TextMeshPro",
         "UniTask",
         "PrimeTween.Runtime",
-        "EditorAttributes"
+        "EditorAttributes",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -14,6 +15,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.cinemachine",
+            "expression": "3.1.0",
+            "define": "UNITY_CINEMACHINE"
+        }
+    ],
     "noEngineReferences": false
 }

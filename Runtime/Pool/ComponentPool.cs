@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace GameDevKit.Pool
 {
-    public interface IObjectPoolEventReceiver
+    public interface IPoolableObject
     {
         void HandleOnRelease();
         void HandleOnGet();
@@ -24,7 +24,7 @@ namespace GameDevKit.Pool
         T Get(bool activate = true);
         void Release(T element, bool resetTransform = true);
         void ReleaseAll(bool resetTransform = true);
-        void Clear();
+        void ClearAll();
     }
 
     public class ComponentPool<T> : IComponentPool<T> where T : Component
@@ -60,10 +60,10 @@ namespace GameDevKit.Pool
 
         public readonly Transform Container;
 
-        private readonly T _template;
         private readonly HashSet<T> _activeSet = new();
         private readonly Stack<T> _inactiveStack = new();
 
+        private T _template;
         private T _sceneTemplate;
 
         public ComponentPool(T template, Transform container, bool ensureSceneTemplate = true)
@@ -71,14 +71,20 @@ namespace GameDevKit.Pool
             _template = template;
             Container = container;
             EnsureSceneTemplate = ensureSceneTemplate;
-
-            if (ensureSceneTemplate)
-            {
-                Template.gameObject.SetActive(false);
-            }
         }
 
         private readonly Dictionary<T, Action<T>> _pendingUpdates = new();
+
+        public void ReplaceTemplate(T newTemplate)
+        {
+            ClearAll();
+            if (_sceneTemplate != null)
+            {
+                Object.Destroy(_sceneTemplate);
+                _sceneTemplate = null;
+            }
+            _template = newTemplate;
+        }
 
         /// <summary>
         /// Updates the template.<br/>
@@ -145,9 +151,9 @@ namespace GameDevKit.Pool
             _activeSet.Add(element);
 
             OnGet?.Invoke(element);
-            if (element is IObjectPoolEventReceiver receiver)
+            if (element is IPoolableObject poolableObject)
             {
-                receiver.HandleOnGet();
+                poolableObject.HandleOnGet();
             }
             return element;
 
@@ -179,9 +185,9 @@ namespace GameDevKit.Pool
             }
 
             OnRelease?.Invoke(element);
-            if (element is IObjectPoolEventReceiver receiver)
+            if (element is IPoolableObject poolableObject)
             {
-                receiver.HandleOnRelease();
+                poolableObject.HandleOnRelease();
             }
 
             if (_pendingUpdates.Remove(element, out var updateAction))
@@ -202,7 +208,7 @@ namespace GameDevKit.Pool
             _activeSet.Clear();
         }
 
-        public void Clear()
+        public void ClearAll()
         {
             ClearActive();
             ClearInactive();

@@ -37,7 +37,7 @@ namespace GameDevKit
 
     public class SourcedDelegateBag : List<ISourcedDelegate>
     {
-        public void RemoveSource(object source)
+        public void UnsubscribeSource(object source)
         {
             foreach (var del in this)
             {

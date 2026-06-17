@@ -3,50 +3,101 @@ using System.Collections.Generic;
 using EditorAttributes;
 using UnityEngine;
 
+#if UNITY_CINEMACHINE
+using Unity.Cinemachine;
+#endif
+
 namespace GameDevKit
 {
     /// <summary>
     /// Adjusts the camera's orthographic size to maintain a consistent aspect ratio across multiple devices based on reference dimensions.
     /// </summary>
-    [RequireComponent(typeof(Camera))]
     public class CameraAspectRatioAdapter : MonoBehaviour
     {
-        [SerializeField] private float _pixelsPerUnit = 100f;
-        [SerializeField] private float _referenceWidth = 1080f;
-        [SerializeField] private float _referenceHeight = 1920f;
+#if UNITY_CINEMACHINE
+        [SerializeField] private CinemachineCamera _vCam;
+#endif
 
-        public Camera Camera { get; private set; }
+        [SerializeField] private Camera _cam;
 
-        public float BaseOrthographicSize => _referenceHeight / _pixelsPerUnit / 2f;
+        public float ReferenceWidth = 1080f;
+        public float ReferenceHeight = 1920f;
 
-        private void Awake()
+        /// <summary> If true, use the camera's current orthographic size as the base size. If false, use the specified BaseOrthographicSize.</summary>
+        public bool UseCameraOrtho;
+
+        [HideField(nameof(UseCameraOrtho))]
+        public float BaseOrthographicSize = 9.6f;
+
+#if UNITY_EDITOR
+        private void Reset()
         {
-            Camera = GetComponent<Camera>();
+#if UNITY_CINEMACHINE
+            _vCam = GetComponentInChildren<CinemachineCamera>();
+#endif
+            _cam = GetComponentInChildren<Camera>();
         }
+#endif
 
         private void Start()
         {
+            if (UseCameraOrtho)
+            {
+                BaseOrthographicSize = GetCameraOrthoSize();
+            }
+
             UpdateCameraSize();
+        }
+
+        [Button]
+        private void CalculateSize(float pixelsPerUnit)
+        {
+            var orthographicSize = ReferenceHeight / pixelsPerUnit / 2f;
+            Debug.Log(orthographicSize);
         }
 
         [Button]
         public void UpdateCameraSize()
         {
-            Camera ??= GetComponent<Camera>();
+            var targetAspect = ReferenceWidth / ReferenceHeight;
+            var windowAspect = (float)Screen.width / Screen.height;
 
-            float targetAspect = _referenceWidth / _referenceHeight;
-            float windowAspect = (float)Screen.width / Screen.height;
+            // If screen is narrower than reference, match width
+            // If screen is equal or wider than reference, match height
+            var sizeDifference = windowAspect < targetAspect ? targetAspect / windowAspect : 1;
 
-            if (windowAspect < targetAspect)
+            SetCameraOrthoSize(BaseOrthographicSize * sizeDifference);
+        }
+
+        private float GetCameraOrthoSize()
+        {
+#if UNITY_CINEMACHINE
+            if (_vCam != null)
             {
-                // Screen is narrower than reference, match width
-                float sizeDifference = targetAspect / windowAspect;
-                Camera.orthographicSize = BaseOrthographicSize * sizeDifference;
+                return _vCam.Lens.OrthographicSize;
             }
-            else
+#endif
+
+            if (_cam != null)
             {
-                // Screen is equal or wider than reference, match height
-                Camera.orthographicSize = BaseOrthographicSize;
+                return _cam.orthographicSize;
+            }
+
+            return 0;
+        }
+
+        private void SetCameraOrthoSize(float size)
+        {
+#if UNITY_CINEMACHINE
+            if (_vCam != null)
+            {
+                _vCam.Lens.OrthographicSize = size;
+            }
+#endif
+
+            if (_cam != null)
+            {
+                _cam.orthographicSize = size;
             }
         }
     }
