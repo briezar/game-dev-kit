@@ -154,6 +154,20 @@ public static class StringExtensions
         return text[startIndex..endIndex];
     }
 
+    public static string RemoveFirst(this string input, string toRemove)
+    {
+        var index = input.IndexOf(toRemove, StringComparison.Ordinal);
+        if (index < 0) { return input; }
+        return input.Remove(index, toRemove.Length);
+    }
+
+    public static string RemoveLast(this string input, string toRemove)
+    {
+        var index = input.LastIndexOf(toRemove, StringComparison.Ordinal);
+        if (index < 0) { return input; }
+        return input.Remove(index, toRemove.Length);
+    }
+
     private static readonly Regex _separateCamelCaseRegex = new(@"(?<=[a-z])(?=[A-Z])|(?<=[A-Za-z])(?=\d)|(?<=\d)(?=[A-Za-z])", RegexOptions.Compiled);
 
     /// <summary> "SeparateCamelCase" -> "Separate Camel Case" </summary>

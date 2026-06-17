@@ -129,7 +129,7 @@ namespace GameDevKit.ObjectReferences
         public void OnAfterDeserialize()
         {
 #if UNITY_EDITOR
-            // We sadly cannot touch assetdatabase during serialization, so defer by a bit.
+            // We sadly cannot touch asset database during serialization, so defer by a bit.
             EditorApplication.update += HandleAfterDeserialize;
 #endif
         }
@@ -144,7 +144,7 @@ namespace GameDevKit.ObjectReferences
 
         private string GetScenePathFromAsset()
         {
-            return sceneAsset == null ? string.Empty : AssetDatabase.GetAssetPath(sceneAsset);
+            return sceneAsset == null ? string.Empty : AssetDatabase.GetAssetPath(sceneAsset).RemoveFirst("Assets/").RemoveLast(".unity");
         }
 
         private void HandleBeforeSerialize()
@@ -157,7 +157,7 @@ namespace GameDevKit.ObjectReferences
 
                 EditorSceneManager.MarkAllScenesDirty();
             }
-            // Asset takes precendence and overwrites Path
+            // Asset takes precedence and overwrites Path
             else
             {
                 scenePath = GetScenePathFromAsset();
@@ -262,7 +262,7 @@ namespace GameDevKit.ObjectReferences
                     DrawSceneInfoGUI(position, buildScene, sceneControlID + 1);
                 }
 
-                // Optional: If enabled before reset the indentlevel
+                // Optional: If enabled before reset the indent level
                 //}
                 //EditorGUI.indentLevel--;
             }
@@ -278,7 +278,7 @@ namespace GameDevKit.ObjectReferences
             var sceneAssetProperty = GetSceneAssetProperty(property);
             // Add an additional line and check if property.isExpanded
             var lines = property.isExpanded ? sceneAssetProperty.objectReferenceValue != null ? 3 : 2 : 1;
-            // If this oneliner is confusing you - it does the same as
+            // If this one-liner is confusing you - it does the same as
             //var line = 3; // Fully expanded and with info
             //if(sceneAssetProperty.objectReferenceValue == null) line = 2;
             //if(!property.isExpanded) line = 1;
@@ -462,7 +462,7 @@ namespace GameDevKit.ObjectReferences
 
             /// <summary>
             /// A blocking call to the Version Control system to see if the build settings asset is readonly.
-            /// Use BuildSettingsIsReadOnly for version that caches the value for better responsivenes.
+            /// Use BuildSettingsIsReadOnly for version that caches the value for better responsiveness.
             /// </summary>
             private static bool QueryBuildSettingsStatus()
             {
