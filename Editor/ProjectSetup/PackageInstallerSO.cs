@@ -102,7 +102,7 @@ namespace GameDevKit.Editor
                 $"The following required packages are not installed:\n\n{GetPackageListing(missingPackages)}\n\nInstall them now?",
                 "Install", "Ignore");
 
-            if (install) { PackagesUtils.InstallPackages(missingPackages); }
+            if (install) { PackageUtils.InstallPackages(missingPackages); }
         }
 
         private static void PromptInstallEssentials(List<PackageEntry> missingPackages)
@@ -117,7 +117,7 @@ namespace GameDevKit.Editor
                 $"The following recommended packages are not installed:\n\n{GetPackageListing(missingPackages)}\n\nInstall them now?\n\nThis dialog will not show again, you can install from the ${nameof(PackageInstallerSO)}'s Context Menu (top right '...').",
                 "Install", "Skip");
 
-            if (install) { PackagesUtils.InstallPackages(missingPackages); }
+            if (install) { PackageUtils.InstallPackages(missingPackages); }
         }
     }
 }

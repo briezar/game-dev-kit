@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace GameDevKit.Editor
 {
-    public static class PackagesUtils
+    public static class PackageUtils
     {
         private static readonly Queue<PackageEntry> _queue = new();
         private static bool _isInstalling;

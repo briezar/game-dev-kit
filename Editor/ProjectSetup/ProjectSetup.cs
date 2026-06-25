@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,14 +13,14 @@ namespace GameDevKit.Editor
         [MenuItem(MenuItemPath + "Create Folder Structure")]
         public static void CreateFolderStructure()
         {
-            AssetsDirectory.CreateFolder("_Project", new[] { "Art", "Audio", "Prefabs", "Presets", "Scripts" });
-            AssetsDirectory.CreateFolder("_Project/Art", new[] { "Fonts", "Materials", "Shaders", "Sprites" });
+            DirectoryUtils.CreateFolder("_Project", new[] { "Art", "Audio", "Prefabs", "Presets", "Scripts" });
+            DirectoryUtils.CreateFolder("_Project/Art", new[] { "Fonts", "Materials", "Shaders", "Sprites" });
 
-            AssetsDirectory.MoveInto("_Project", "Scenes");
-            AssetsDirectory.MoveInto("Settings", "InputSystem_Actions.inputactions");
+            DirectoryUtils.MoveInto("_Project", "Scenes");
+            DirectoryUtils.MoveInto("Settings", "InputSystem_Actions.inputactions");
 
-            AssetsDirectory.DeleteFolder("TutorialInfo");
-            AssetsDirectory.DeleteFile("Readme.asset");
+            DirectoryUtils.DeleteFolder("TutorialInfo");
+            DirectoryUtils.DeleteFile("Readme.asset");
 
             AssetDatabase.Refresh();
 
@@ -48,79 +47,6 @@ namespace GameDevKit.Editor
 
             var msg = $"Added compiler suppressions through {cscPath}:\n";
             Debug.Log(msg + argumentMap.JoinToString("{0} ({1})"));
-        }
-
-        private static class AssetsDirectory
-        {
-            public static void CreateFolder(string folderPath, string[] childrenFolders = null)
-            {
-                folderPath = ToRelativePath(folderPath);
-                try
-                {
-                    Directory.CreateDirectory(folderPath);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError(ex);
-                }
-
-                if (childrenFolders == null) { return; }
-
-                foreach (var children in childrenFolders)
-                {
-                    CreateFolder(Path.Combine(folderPath, children), null);
-                }
-            }
-
-
-            public static void MoveInto(string parent, string sourcePath)
-            {
-                var sourceAbsolutePath = ToRelativePath(sourcePath);
-                var dest = ToRelativePath(parent, sourcePath);
-
-                try
-                {
-                    Directory.Move(sourceAbsolutePath, dest);
-                    File.Move(sourceAbsolutePath + ".meta", dest + ".meta");
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError(ex);
-                }
-            }
-
-            public static void DeleteFolder(string path)
-            {
-                path = ToRelativePath(path);
-
-                try
-                {
-                    Directory.Delete(path, true);
-                    File.Delete(path + ".meta");
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError(ex);
-                }
-            }
-
-            public static void DeleteFile(string path)
-            {
-                path = ToRelativePath(path);
-
-                try
-                {
-                    File.Delete(path);
-                    File.Delete(path + ".meta");
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError(ex);
-                }
-            }
-
-            private static string ToRelativePath(params string[] paths) => Path.Combine(Application.dataPath, Path.Combine(paths));
-
         }
     }
 }

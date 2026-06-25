@@ -1,7 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.WebGL;
 using UnityEngine;
 
 namespace GameDevKit.Editor.AppBuild
@@ -40,7 +39,6 @@ namespace GameDevKit.Editor.AppBuild
     {
         public WebGLClientBrowserType ClientBrowserType;
         public WebGLTextureSubtarget TextureSubtarget;
-        public WasmCodeOptimization CodeOptimization;
 
         public WebGLCompressionFormat CompressionFormat;
         public bool NameFilesAsHashes;
@@ -54,7 +52,6 @@ namespace GameDevKit.Editor.AppBuild
         {
             EditorUserBuildSettings.webGLClientBrowserType = ClientBrowserType;
             EditorUserBuildSettings.webGLBuildSubtarget = TextureSubtarget;
-            UserBuildSettings.codeOptimization = CodeOptimization;
 
             PlayerSettings.WebGL.compressionFormat = CompressionFormat;
             PlayerSettings.WebGL.nameFilesAsHashes = NameFilesAsHashes;
@@ -71,7 +68,6 @@ namespace GameDevKit.Editor.AppBuild
             {
                 ClientBrowserType = EditorUserBuildSettings.webGLClientBrowserType,
                 TextureSubtarget = EditorUserBuildSettings.webGLBuildSubtarget,
-                CodeOptimization = UserBuildSettings.codeOptimization,
 
                 CompressionFormat = PlayerSettings.WebGL.compressionFormat,
                 NameFilesAsHashes = PlayerSettings.WebGL.nameFilesAsHashes,
