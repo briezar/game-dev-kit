@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace GameDevKit.Editor
+namespace GameDevKit.Installer
 {
     public enum PackageSourceType { Git, ScopedRegistry }
 

@@ -1,16 +1,15 @@
 {
-    "name": "GameDevKit.Editor",
-    "rootNamespace": "",
+    "name": "GameDevKit.Runtime",
+    "rootNamespace": "GameDevKit",
     "references": [
-        "GameDevKit.Runtime",
         "Unity.TextMeshPro",
-        "Unity.TextMeshPro.Editor",
         "UniTask",
-        "EditorAttributes"
+        "PrimeTween.Runtime",
+        "EditorAttributes",
+        "Unity.Cinemachine",
+        "AYellowpaper.SerializedCollections"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

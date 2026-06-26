@@ -5,19 +5,19 @@ using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEngine;
 
-namespace GameDevKit.Editor
+namespace GameDevKit.Installer
 {
     [CreateAssetMenu(menuName = "GameDevKit/PackageInstaller")]
-    public class PackageInstallerSO : ScriptableObject
+    internal class PackageInstallerSO : ScriptableObject
     {
         [Tooltip("Required for the project to compile")]
         [SerializeField] private List<PackageEntry> _dependencies = new();
 
         [Tooltip("Optional but recommended packages")]
-        [SerializeField] private List<PackageEntry> _essentialPackages = new();
+        [SerializeField] private List<PackageEntry> _essentials = new();
 
         public IReadOnlyList<PackageEntry> Dependencies => _dependencies;
-        public IReadOnlyList<PackageEntry> EssentialPackages => _essentialPackages;
+        public IReadOnlyList<PackageEntry> Essentials => _essentials;
 
         internal static PackageInstallerSO Load()
         {
@@ -54,8 +54,8 @@ namespace GameDevKit.Editor
                 return;
             }
 
-            var listRequest = Client.List(offlineMode: false, includeIndirectDependencies: false);
-            while (!listRequest.IsCompleted) { await Task.Delay(100); }
+            var listRequest = Client.List();
+            while (!listRequest.IsCompleted) { await Task.Yield(); }
 
             if (listRequest.Status == StatusCode.Failure)
             {
@@ -69,7 +69,7 @@ namespace GameDevKit.Editor
                 .Where(p => !installedIds.Contains(p.packageId))
                 .ToList();
 
-            var missingEssentials = so.EssentialPackages
+            var missingEssentials = so.Essentials
                 .Where(p => !installedIds.Contains(p.packageId))
                 .ToList();
 

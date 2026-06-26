@@ -35,7 +35,14 @@ MonoBehaviour:
       url: https://registry.npmjs.org/
       scopes:
       - com.kyrylokuzyk
-  _essentialPackages:
+  - packageId: ayellowpaper.serialized-dictionary
+    sourceType: 0
+    gitUrl: https://github.com/ayellowpaper/SerializedDictionary.git
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []
+  _essentials:
   - packageId: com.yasirkula.assetusagedetector
     sourceType: 0
     gitUrl: https://github.com/yasirkula/UnityAssetUsageDetector.git

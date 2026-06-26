@@ -1,10 +1,7 @@
 {
-    "name": "GameDevKit.ProjectSetup",
+    "name": "GameDevKit.Installer",
     "rootNamespace": "",
-    "references": [
-        "GameDevKit",
-        "GameDevKit.Editor"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
