@@ -26,6 +26,13 @@ namespace GameDevKit
         private int? _value;
         public int Value => _value ??= Animator.StringToHash(_paramName);
 
+#if UNITY_EDITOR
+        internal static class EditorProps
+        {
+            public static string ParamName => nameof(_paramName);
+        }
+#endif
+
         public SerializableAnimationHash(string paramName)
         {
             _paramName = paramName;

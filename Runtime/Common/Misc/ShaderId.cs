@@ -30,6 +30,13 @@ namespace GameDevKit
         private int? _propertyId;
         public int PropertyId => _propertyId ??= Shader.PropertyToID(_propertyName);
 
+#if UNITY_EDITOR
+        internal static class EditorProps
+        {
+            public static string PropertyName => nameof(_propertyName);
+        }
+#endif
+
         public SerializableShaderId(string propertyName)
         {
             _propertyName = propertyName;

@@ -57,4 +57,9 @@ namespace GameDevKit.UI
             return fadeSetting;
         }
     }
+
+    public static class ShowOverlayBehaviourExtensions
+    {
+        public static bool HasFlagFast(this ShowOverlayBehaviour showOverlayBehaviour, ShowOverlayBehaviour flag) => (showOverlayBehaviour & flag) == flag;
+    }
 }

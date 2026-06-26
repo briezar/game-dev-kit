@@ -8,15 +8,22 @@ using System.Linq;
 using EditorAttributes;
 using Cysharp.Threading.Tasks;
 
+#if UNITY_EDITOR
+using GameDevKit.Editor;
+#endif
+
 namespace GameDevKit.UI
 {
     public class DefaultUIManagerImpl : MonoBehaviour, IUIManager
     {
         [SerializeField] private Camera _uiCamera;
         [SerializeField] private EventSystem _eventSystem;
-        [SerializeField] private Transform _screenUILayer, _overlayUILayer;
+        [SerializeField] private Canvas _screenUILayer, _overlayUILayer;
+        [SerializeField] private OverlayDim _overlayDim;
+        [SerializeField] private ScreenFader _screenFader;
+
+        [HelpBox("Create via " + UIResourceMapSO.MenuName, drawAbove: true)]
         [SerializeField] private UIResourceMapSO _uiResourceMap;
-        [SerializeField] private UIManagerAnimation _animation;
 
         public Camera UICamera => _uiCamera;
         public EventSystem EventSystem => _eventSystem;
@@ -42,7 +49,7 @@ namespace GameDevKit.UI
 
             ReferenceResolution = GetComponentInChildren<CanvasScaler>().referenceResolution;
 
-            var layers = new Transform[] { _screenUILayer, _overlayUILayer };
+            var layers = new Transform[] { _screenUILayer.transform, _overlayUILayer.transform };
 
             foreach (var view in layers.SelectMany(layer => layer.GetComponentsInChildren<UIView>(true)))
             {
@@ -60,12 +67,23 @@ namespace GameDevKit.UI
 
         private Transform GetLayer(UIView view) => view switch
         {
-            ScreenUI => _screenUILayer,
-            OverlayUI => _overlayUILayer,
-            _ => _screenUILayer,
+            ScreenUI => _screenUILayer.transform,
+            OverlayUI => _overlayUILayer.transform,
+            _ => _screenUILayer.transform,
         };
 
 #if UNITY_EDITOR
+        [Button]
+        private void EnsureSortingLayer()
+        {
+            var canvasLayers = new Canvas[] { _screenUILayer, _overlayUILayer, _overlayDim.canvas, _screenFader.canvas };
+
+            foreach (var canvasLayer in canvasLayers)
+            {
+                EditorUtils.CreateSortingLayer(canvasLayer.sortingLayerName, canvasLayer.sortingLayerID);
+            }
+        }
+
         private List<string> _setInteractableCallers = new();
         [Button]
         private void CheckInteractableCaller()
@@ -131,7 +149,7 @@ namespace GameDevKit.UI
             }
         }
 
-        public UniTask FadeTransition(FadeSetting fadeSetting) => _animation.FadeTransition(fadeSetting);
+        public UniTask FadeTransition(FadeSetting fadeSetting) => _screenFader.FadeTransition(fadeSetting);
 
         private void AddInstantiatedUI(UIView view)
         {
@@ -188,10 +206,10 @@ namespace GameDevKit.UI
 
             if (view is OverlayUI overlayUI)
             {
-                if (overlayUI.ShowBehaviour.HasFlag(ShowOverlayBehaviour.DimLowerUI))
+                if (overlayUI.ShowBehaviour.HasFlagFast(ShowOverlayBehaviour.DimLowerUI))
                 {
-                    _animation.PopupBgDim.PositionBelowUI(overlayUI);
-                    _animation.FadeOverlayUIDim(true);
+                    _overlayDim.PositionBelowUI(overlayUI);
+                    _overlayDim.Fade(1);
                 }
             }
 
@@ -244,18 +262,17 @@ namespace GameDevKit.UI
 
             for (int i = _views.Count - 1; i >= 0; i--)
             {
-
-                if (_views[i] is OverlayUI upperOverlayUI && upperOverlayUI.ShowBehaviour.HasFlag(ShowOverlayBehaviour.DimLowerUI))
+                if (_views[i] is OverlayUI upperOverlayUI && upperOverlayUI.ShowBehaviour.HasFlagFast(ShowOverlayBehaviour.DimLowerUI))
                 {
-                    _animation.PopupBgDim.PositionBelowUI(upperOverlayUI);
+                    _overlayDim.PositionBelowUI(upperOverlayUI);
                     break;
                 }
 
                 if (i == 0)
                 {
-                    if (view is OverlayUI firstOverlayUI && firstOverlayUI.ShowBehaviour.HasFlag(ShowOverlayBehaviour.DimLowerUI))
+                    if (view is OverlayUI firstOverlayUI && firstOverlayUI.ShowBehaviour.HasFlagFast(ShowOverlayBehaviour.DimLowerUI))
                     {
-                        _animation.FadeOverlayUIDim(false);
+                        _overlayDim.Fade(0);
                     }
                 }
             }

@@ -21,7 +21,7 @@ namespace GameDevKit.UI
 
 #if UNITY_EDITOR
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             if (_screenW != Screen.width || _screenH != Screen.height)
             {
@@ -30,7 +30,7 @@ namespace GameDevKit.UI
         }
 #endif
 
-        void UpdateRatio()
+        private void UpdateRatio()
         {
 #if UNITY_EDITOR
             _screenW = Screen.width;

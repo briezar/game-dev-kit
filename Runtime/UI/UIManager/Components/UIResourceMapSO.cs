@@ -9,14 +9,17 @@ using UnityEditor;
 
 namespace GameDevKit.UI
 {
-    [CreateAssetMenu(menuName = "GameDevKit/UI/UIResourceMap")]
+    [CreateAssetMenu(menuName = MenuName)]
     public class UIResourceMapSO : ScriptableObject
     {
+        [HelpBox("This will be auto-filled.", drawAbove: true)]
         [SerializeField] private SerializedDictionary<string, string> _uiResourceMap;
 
 #if UNITY_EDITOR
-        [SerializeField] private FolderReference _uiFolder;
+        [HelpBox("The Resources folder that holds all your UI. Folder structure doesn't matter, just need to be inside a Resources folder.", drawAbove: true)]
+        [SerializeField] private ResourcesFolderReference _uiFolder;
 
+        public const string MenuName = "GameDevKit/UI/UIResourceMap";
         private static UIResourceMapSO _instance;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -26,6 +29,12 @@ namespace GameDevKit.UI
         [Button]
         private void GenerateResourcePaths()
         {
+            if (_uiFolder == null)
+            {
+                Debug.LogError($"UIResourceMap: UI Folder is not set. Please assign a folder that holds all of your UI in the inspector.", this);
+                return;
+            }
+
             var before = _uiResourceMap.ToJson();
 
             _uiResourceMap.Clear();

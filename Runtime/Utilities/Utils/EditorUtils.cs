@@ -12,6 +12,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace GameDevKit.Editor
 {
@@ -171,6 +172,37 @@ namespace GameDevKit.Editor
                 .ToArray();
 
             return components;
+        }
+
+        public static bool CreateSortingLayer(string sortingLayerName, int? uniqueID = null)
+        {
+            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var sortingLayers = tagManager.FindProperty("m_SortingLayers");
+
+            // Check if the layer already exists
+            for (int i = 0; i < sortingLayers.arraySize; i++)
+            {
+                var element = sortingLayers.GetArrayElementAtIndex(i);
+                var nameProp = element.FindPropertyRelative("name");
+
+                if (nameProp.stringValue == sortingLayerName)
+                {
+                    Debug.Log($"Layer '{sortingLayerName}' already exists.");
+                    return false;
+                }
+            }
+
+            // Add the new layer to the end of the array
+            sortingLayers.InsertArrayElementAtIndex(sortingLayers.arraySize);
+            var newLayer = sortingLayers.GetArrayElementAtIndex(sortingLayers.arraySize - 1);
+            newLayer.FindPropertyRelative("name").stringValue = sortingLayerName;
+            newLayer.FindPropertyRelative("uniqueID").intValue = uniqueID ?? Random.Range(100000, 999999); // Generate random unique ID
+
+            // Apply changes permanently to the project
+            tagManager.ApplyModifiedProperties();
+            Debug.Log($"Successfully created Sorting Layer: {sortingLayerName}");
+
+            return true;
         }
     }
 }
