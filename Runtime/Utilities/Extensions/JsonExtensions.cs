@@ -18,4 +18,10 @@ public static class JsonExtensions
         return JsonUtility.ToJson(obj, prettyPrint);
     }
 
+    public static T CloneJsonUnity<T>(this T obj)
+    {
+        if (obj == null) { return default; }
+        return (T)JsonUtility.FromJson(JsonUtility.ToJson(obj), obj.GetType());
+    }
+
 }
