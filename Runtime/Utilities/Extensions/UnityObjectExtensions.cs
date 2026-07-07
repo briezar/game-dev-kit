@@ -2,8 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using GameDevKit;
+using GameDevKit.EventProxies;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -28,7 +27,7 @@ namespace SpecializedExtensions
             }
             else
             {
-                gameObject.AddComponent<LifeCycleHook>().Enabled.AddListener(OverrideSorting);
+                gameObject.AddComponent<EventProxy_LifeCycle>().onStartOrEnable.AddListener(OverrideSorting);
             }
 
             if (allowClick) { gameObject.GetOrAddComponent<GraphicRaycaster>(); }
