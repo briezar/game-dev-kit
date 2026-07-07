@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameDevKit.Text
 {
-    [CreateAssetMenu(menuName = "TextPreprocessors/SpriteAssetInstruction")]
+    [CreateAssetMenu(menuName = EditorConstants.MenuPath + "TextPreprocessors/SpriteAssetInstruction")]
     public class SpriteAssetInstruction : TextPreprocessorInstruction
     {
         [SerializeField] private TMP_SpriteAsset _spriteAsset;
