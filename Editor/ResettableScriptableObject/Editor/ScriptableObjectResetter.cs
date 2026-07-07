@@ -19,15 +19,17 @@ namespace GameDevKit.Editor
         {
             switch (state)
             {
-                case PlayModeStateChange.EnteredPlayMode:
-                    SaveStates();
-                    break;
+                // for some reason this is called after MonoBehaviour's Start(), using RuntimeInitializeOnLoadMethod instead
+                // case PlayModeStateChange.EnteredPlayMode:
+                //     SaveStates();
+                //     break;
                 case PlayModeStateChange.EnteredEditMode:
                     RestoreStates();
                     break;
             }
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void SaveStates()
         {
             _objectStates.Clear();
