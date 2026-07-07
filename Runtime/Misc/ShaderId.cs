@@ -47,7 +47,7 @@ namespace GameDevKit
         public static implicit operator SerializableShaderId(string propertyName) => new(propertyName);
     }
 
-    public static class ShaderIdExtension
+    public static class ShaderIdExtensions
     {
         public static T Get<T>(this IMaterialPropertyReadWrite<T> prop, Renderer renderer) => prop.Get(renderer.material);
         public static void Set<T>(this IMaterialPropertyReadWrite<T> prop, Renderer renderer, T value) => prop.Set(renderer.material, value);
