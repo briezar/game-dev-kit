@@ -15,6 +15,8 @@ namespace GameDevKit.Editor
 
         private void Awake()
         {
+            if (CachedResettableTypes.Count == 0) { return; }
+
             UpdateResettableTypes();
             PopulateGuids();
         }
