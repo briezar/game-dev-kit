@@ -27,8 +27,15 @@ namespace GameDevKit.Pool
         void ClearAll();
     }
 
+    [Serializable]
     public class ComponentPool<T> : IComponentPool<T> where T : Component
     {
+        [SerializeField] private T _template;
+        [SerializeField] private Transform _container;
+
+        [Tooltip("If template is a prefab outside of a scene, will instantiate a scene template from the prefab, then pool from the scene template. This is useful for altering the template in the scene without affecting the prefab.")]
+        [SerializeField] private bool _ensureSceneTemplate;
+
         public Action<T> OnInstantiate { get; set; }
         public Action<T> OnGet { get; set; }
         public Action<T> OnRelease { get; set; }
@@ -36,7 +43,7 @@ namespace GameDevKit.Pool
         public IReadOnlyCollection<T> ActiveElements => _activeSet;
         public IReadOnlyCollection<T> InactiveElements => _inactiveStack;
 
-        public readonly bool EnsureSceneTemplate;
+        public Transform Container => _container;
 
         /// <summary> Editing this can affect prefab data if template is a prefab!  </summary>
         public T OriginalTemplate => _template;
@@ -58,29 +65,29 @@ namespace GameDevKit.Pool
             }
         }
 
-        public readonly Transform Container;
+        public bool EnsureSceneTemplate => _ensureSceneTemplate;
 
         private readonly HashSet<T> _activeSet = new();
         private readonly Stack<T> _inactiveStack = new();
 
-        private T _template;
         private T _sceneTemplate;
 
+        private readonly Dictionary<T, Action<T>> _pendingUpdates = new();
+
+        protected ComponentPool() { }
         public ComponentPool(T template, Transform container, bool ensureSceneTemplate = true)
         {
             _template = template;
-            Container = container;
-            EnsureSceneTemplate = ensureSceneTemplate;
+            _container = container;
+            _ensureSceneTemplate = ensureSceneTemplate;
         }
-
-        private readonly Dictionary<T, Action<T>> _pendingUpdates = new();
 
         public void ReplaceTemplate(T newTemplate)
         {
             ClearAll();
             if (_sceneTemplate != null)
             {
-                Object.Destroy(_sceneTemplate);
+                Object.Destroy(_sceneTemplate.gameObject);
                 _sceneTemplate = null;
             }
             _template = newTemplate;

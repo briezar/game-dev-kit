@@ -10,12 +10,28 @@ namespace GameDevKit.EventProxies
     [RequireComponent(typeof(Collider))]
     public class EventProxy_OnTrigger : MonoBehaviour
     {
-        public TriggerEvent OnEnter;
-        public TriggerEvent OnStay;
-        public TriggerEvent OnExit;
+        public TriggerEvent onEnter;
+        public TriggerEvent onStay;
+        public TriggerEvent onExit;
 
-        private void OnTriggerEnter(Collider other) => OnEnter?.Invoke(other);
-        private void OnTriggerStay(Collider other) => OnStay?.Invoke(other);
-        private void OnTriggerExit(Collider other) => OnExit?.Invoke(other);
+        public bool FireWhenDisabled = false;
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!FireWhenDisabled && !enabled) { return; }
+            onEnter?.Invoke(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (!FireWhenDisabled && !enabled) { return; }
+            onStay?.Invoke(other);
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (!FireWhenDisabled && !enabled) { return; }
+            onExit?.Invoke(other);
+        }
     }
 }

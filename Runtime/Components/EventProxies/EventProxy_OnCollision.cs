@@ -14,8 +14,24 @@ namespace GameDevKit.EventProxies
         public CollisionEvent onStay;
         public CollisionEvent onExit;
 
-        private void OnCollisionEnter(Collision collision) => onEnter?.Invoke(collision);
-        private void OnCollisionStay(Collision collision) => onStay?.Invoke(collision);
-        private void OnCollisionExit(Collision collision) => onExit?.Invoke(collision);
+        public bool FireWhenDisabled = false;
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (!FireWhenDisabled && !enabled) { return; }
+            onEnter?.Invoke(collision);
+        }
+
+        private void OnCollisionStay(Collision collision)
+        {
+            if (!FireWhenDisabled && !enabled) { return; }
+            onStay?.Invoke(collision);
+        }
+
+        private void OnCollisionExit(Collision collision)
+        {
+            if (!FireWhenDisabled && !enabled) { return; }
+            onExit?.Invoke(collision);
+        }
     }
 }
