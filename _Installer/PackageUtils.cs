@@ -12,28 +12,46 @@ namespace GameDevKit.Installer
 {
     public static class PackageUtils
     {
-        public static async void InstallPackages(IEnumerable<PackageEntry> packages)
+        public static async void InstallPackages(IEnumerable<PackageEntry> packageEntries)
         {
-            EnsureScopedRegistry(packages);
+            EnsureScopedRegistry(packageEntries);
 
-            var packagesToAdd = packages.Select(p => p.sourceType is PackageSourceType.Git ? p.gitUrl : p.packageId).ToList();
+            var packagesToAdd = packageEntries.Select(p => p.sourceType is PackageSourceType.Git ? p.gitUrl : p.packageId).ToList();
 
             var request = Client.AddAndRemove(packagesToAdd.ToArray());
-
+            var timer = new Timer(packagesToAdd.Count * 10);
             while (!request.IsCompleted)
             {
-                await Task.Yield();
+                EditorUtility.DisplayProgressBar(
+                    "GameDevKit — Checking Packages",
+                    "Installing packages...",
+                    timer.GetProgressMax(0.9f));
+                await Task.Delay(timer.IntervalMs);
+                timer.Tick();
             }
 
-            var installedPackages = request.Result.Where(p => packagesToAdd.Contains(p.name, StringComparer.Ordinal)).ToList();
+            EditorUtility.ClearProgressBar();
+
+            if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError($"[GameDevKit] Failed to install: {request.Error.message}");
+                return;
+            }
+
+            if (request.Result == null)
+            {
+                await Task.Yield();
+                if (request.Result == null)
+                {
+                    Debug.LogWarning($"request.Result is null!");
+                    return;
+                }
+            }
 
             if (request.Status == StatusCode.Success)
             {
-                Debug.Log($"[GameDevKit] Installed {installedPackages.Count} packages:\n{string.Join("\n", installedPackages.Select(p => p.packageId))}");
-            }
-            else if (request.Status >= StatusCode.Failure)
-            {
-                Debug.LogError($"[GameDevKit] Failed to install {installedPackages.Count}: {request.Error.message}");
+                var installedPackages = request.Result.Where(pInfo => packageEntries.Any(pEntry => string.Equals(pInfo.name, pEntry.packageId, StringComparison.Ordinal))).ToList();
+                Debug.Log($"[GameDevKit] Installed {installedPackages.Count} package(s):\n{string.Join("\n", installedPackages.Select(p => p.packageId))}");
             }
         }
 
@@ -54,10 +72,30 @@ namespace GameDevKit.Installer
             }
         }
 
-        public class PackageManifest
+    }
+
+    internal struct Timer
+    {
+        public float Duration;
+        public float Interval;
+
+        private float _elapsed;
+        public float Elapsed
         {
-            public Dictionary<string, string> dependencies = new();
-            public List<ScopedRegistry> scopedRegistries = new();
+            readonly get => _elapsed;
+            set => _elapsed = Mathf.Clamp(value, 0, Duration);
         }
+        public readonly float Progress => Duration > 0f ? Mathf.Clamp01(Elapsed / Duration) : 1f;
+        public readonly int IntervalMs => (int)(Interval * 1000);
+
+        public Timer(float duration, float interval = 0.1f)
+        {
+            (Duration, Interval) = (duration, interval);
+            _elapsed = 0;
+        }
+
+        public readonly float GetProgressMax(float max) => Mathf.Min(Progress, max);
+
+        public void Tick(float? delta = null) => Elapsed += delta ?? Interval;
     }
 }

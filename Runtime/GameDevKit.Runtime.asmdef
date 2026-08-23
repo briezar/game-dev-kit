@@ -2,11 +2,11 @@
     "name": "GameDevKit.Runtime",
     "rootNamespace": "GameDevKit",
     "references": [
+        "Unity.Cinemachine",
         "Unity.TextMeshPro",
         "UniTask",
         "PrimeTween.Runtime",
         "EditorAttributes",
-        "Unity.Cinemachine",
         "AYellowpaper.SerializedCollections"
     ],
     "includePlatforms": [],
@@ -16,36 +16,48 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "UNITASK_INSTALLED",
-        "PRIMETWEEN_INSTALLED",
-        "EDITOR_ATTRIBUTES_INSTALLED",
-        "SERIALIZED_DICTIONARY_INSTALLED"
+        "DEPENDENCY_CYSHARP_UNITASK",
+        "DEPENDENCY_V0LT_EDITOR_ATTRIBUTES",
+        "DEPENDENCY_KYRYLOKUZYK_PRIMETWEEN",
+        "DEPENDENCY_AYELLOWPAPER_SERIALIZED_DICTIONARY",
+        "DEPENDENCY_UNITY_NUGET_NEWTONSOFT_JSON",
+        "DEPENDENCY_EFLATUN_SCENEREFERENCE"
     ],
     "versionDefines": [
-        {
-            "name": "com.cysharp.unitask",
-            "expression": "2.5.11",
-            "define": "UNITASK_INSTALLED"
-        },
-        {
-            "name": "com.kyrylokuzyk.primetween",
-            "expression": "1.4.8",
-            "define": "PRIMETWEEN_INSTALLED"
-        },
-        {
-            "name": "com.v0lt.editor-attributes",
-            "expression": "3.0.4",
-            "define": "EDITOR_ATTRIBUTES_INSTALLED"
-        },
-        {
-            "name": "ayellowpaper.serialized-dictionary",
-            "expression": "1.0.0",
-            "define": "SERIALIZED_DICTIONARY_INSTALLED"
-        },
         {
             "name": "com.unity.cinemachine",
             "expression": "3.1.0",
             "define": "UNITY_CINEMACHINE"
+        },
+        {
+            "name": "com.cysharp.unitask",
+            "expression": "2.5.11",
+            "define": "DEPENDENCY_CYSHARP_UNITASK"
+        },
+        {
+            "name": "com.kyrylokuzyk.primetween",
+            "expression": "1.4.8",
+            "define": "DEPENDENCY_KYRYLOKUZYK_PRIMETWEEN"
+        },
+        {
+            "name": "com.v0lt.editor-attributes",
+            "expression": "3.0.4",
+            "define": "DEPENDENCY_V0LT_EDITOR_ATTRIBUTES"
+        },
+        {
+            "name": "ayellowpaper.serialized-dictionary",
+            "expression": "1.0.0",
+            "define": "DEPENDENCY_AYELLOWPAPER_SERIALIZED_DICTIONARY"
+        },
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "1.0.0",
+            "define": "DEPENDENCY_UNITY_NUGET_NEWTONSOFT_JSON"
+        },
+        {
+            "name": "com.eflatun.scenereference",
+            "expression": "1.0.0",
+            "define": "DEPENDENCY_EFLATUN_SCENEREFERENCE"
         }
     ],
     "noEngineReferences": false

@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.PackageManager;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace GameDevKit.Installer
@@ -10,11 +13,16 @@ namespace GameDevKit.Installer
     [CreateAssetMenu(menuName = "GameDevKit/PackageInstaller")]
     internal class PackageInstallerSO : ScriptableObject
     {
+        [Header("Check the Context Menu for commands")]
+        [Space]
         [Tooltip("Required for the project to compile")]
         [SerializeField] private List<PackageEntry> _dependencies = new();
 
         [Tooltip("Optional but recommended packages")]
         [SerializeField] private List<PackageEntry> _essentials = new();
+
+        [Tooltip("Asmdefs that should remain excluded from compilation until PackageInstaller has installed their required dependencies. The Update Dependent Asmdefs command adds the necessary version defines and constraints.")]
+        [SerializeField] private AssemblyDefinitionAsset[] _dependentAsmdefs = Array.Empty<AssemblyDefinitionAsset>();
 
         public IReadOnlyList<PackageEntry> Dependencies => _dependencies;
         public IReadOnlyList<PackageEntry> Essentials => _essentials;
@@ -28,6 +36,84 @@ namespace GameDevKit.Installer
 
         [ContextMenu("Install Packages")]
         private void InstallPackages() => InstallationChecker.CheckDependencies();
+
+        [ContextMenu("Update Dependent Asmdefs")]
+        private void UpdateDependentAsmdefs()
+        {
+            foreach (var asmdef in _dependentAsmdefs)
+            {
+                if (asmdef == null) { continue; }
+
+                var prevJson = asmdef.text;
+                var data = JsonUtility.FromJson<AssemblyDefinitionData>(prevJson);
+                if (data == null) { continue; }
+
+                data.versionDefines ??= new();
+                data.defineConstraints ??= new();
+
+                foreach (var packageId in _dependencies.Select(dependency => dependency.packageId).Where(packageId => !string.IsNullOrEmpty(packageId)))
+                {
+                    var define = GetDefineSymbol(packageId);
+                    var versionDefine = data.versionDefines.FirstOrDefault(item => item.name == packageId);
+                    if (versionDefine == null)
+                    {
+                        data.versionDefines.Add(new()
+                        {
+                            name = packageId,
+                            expression = "1.0.0",
+                            define = define
+                        });
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(versionDefine.expression))
+                        {
+                            versionDefine.expression = "1.0.0";
+                        }
+
+                        versionDefine.define = define;
+                    }
+
+                    if (!data.defineConstraints.Contains(define))
+                    {
+                        data.defineConstraints.Add(define);
+                    }
+                }
+
+                var newJson = JsonUtility.ToJson(data, true);
+                if (string.Equals(prevJson, newJson, StringComparison.Ordinal))
+                {
+                    Debug.Log($"Nothing changed in {asmdef.name}", asmdef);
+                    continue;
+                }
+
+                var path = AssetDatabase.GetAssetPath(asmdef);
+                File.WriteAllText(path, newJson);
+                AssetDatabase.ImportAsset(path);
+
+                Debug.Log($"Updated {asmdef.name}", asmdef);
+            }
+
+        }
+
+        /// <summary>Converts a UPM package ID into a valid scripting define symbol.</summary>
+        /// <param name="packageId">The package ID used by the version define.</param>
+        /// <returns><c>DEPENDENCY_[x]</c> symbol derived from the package ID.</returns>
+        private static string GetDefineSymbol(string packageId)
+        {
+            const string removeStart = "com.";
+            if (packageId.StartsWith(removeStart, StringComparison.Ordinal))
+            {
+                packageId = packageId[removeStart.Length..];
+            }
+
+            var define = new string(packageId
+                .ToUpperInvariant()
+                .Select(character => character is >= 'A' and <= 'Z' || character is >= '0' and <= '9' || character == '_' ? character : '_')
+                .ToArray());
+
+            return "DEPENDENCY_" + define;
+        }
     }
 
     [InitializeOnLoad]
@@ -55,7 +141,18 @@ namespace GameDevKit.Installer
             }
 
             var listRequest = Client.List();
-            while (!listRequest.IsCompleted) { await Task.Yield(); }
+            var timer = new Timer(1f);
+            while (!listRequest.IsCompleted)
+            {
+                EditorUtility.DisplayProgressBar(
+                    "GameDevKit — Checking Packages",
+                    "Loading installed packages...",
+                    timer.GetProgressMax(0.9f));
+                await Task.Delay(timer.IntervalMs);
+                timer.Tick();
+            }
+
+            EditorUtility.ClearProgressBar();
 
             if (listRequest.Status == StatusCode.Failure)
             {

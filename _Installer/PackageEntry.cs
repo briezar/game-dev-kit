@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameDevKit.Installer
@@ -30,6 +31,12 @@ namespace GameDevKit.Installer
         public string url;
 
         [Tooltip("Scopes for the registry, e.g. 'com.cysharp' (used when sourceType is ScopedRegistry)")]
-        public string[] scopes;
+        public string[] scopes; // Do not remove! Required for json parsing.
+    }
+
+    public class PackageManifest
+    {
+        public Dictionary<string, string> dependencies = new();
+        public List<ScopedRegistry> scopedRegistries = new();
     }
 }

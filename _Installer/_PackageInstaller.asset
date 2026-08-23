@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f5d63a839afbb7040aa6ac501a7dfb9f, type: 3}
-  m_Name: PackageInstaller
+  m_Name: _PackageInstaller
   m_EditorClassIdentifier: 
   _dependencies:
   - packageId: com.cysharp.unitask
@@ -49,6 +49,13 @@ MonoBehaviour:
       name: 
       url: 
       scopes: []
+  - packageId: com.eflatun.scenereference
+    sourceType: 0
+    gitUrl: https://github.com/starikcetin/Eflatun.SceneReference.git#upm
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []
   _essentials:
   - packageId: com.yasirkula.assetusagedetector
     sourceType: 0
@@ -64,3 +71,6 @@ MonoBehaviour:
       name: 
       url: 
       scopes: []
+  _dependentAsmdefs:
+  - {fileID: 5897886265953266890, guid: 73473c1954966a148b9aba952ecf96f0, type: 3}
+  - {fileID: 5897886265953266890, guid: d4e245946b8ca104cb6fa78b7850c6f2, type: 3}
