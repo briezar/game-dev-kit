@@ -103,6 +103,7 @@ namespace GameDevKit.UI
             }
         }
 
+        [Serializable]
         public abstract class SlideInstruction : Instruction
         {
             public enum SlideDirection { None, LeftToRight, RightToLeft }

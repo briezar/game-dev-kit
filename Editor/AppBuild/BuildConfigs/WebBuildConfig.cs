@@ -12,6 +12,14 @@ namespace GameDevKit.Editor.AppBuild
 
         private WebBuildSettings _originalSettings;
 
+        public WebBuildConfig()
+        {
+            BuildOptions = BuildOptions.Development | BuildOptions.CompressWithLz4HC;
+            BuildTarget = BuildTarget.WebGL;
+            BuildTargetGroup = BuildTargetGroup.WebGL;
+            BuildSuffix = "-dev";
+        }
+
         public override async UniTask PreBuildAsync()
         {
             _originalSettings = WebBuildSettings.GetCurrentSettings();
@@ -27,11 +35,6 @@ namespace GameDevKit.Editor.AppBuild
             await UniTask.SwitchToMainThread();
         }
 
-        public override BuildPlayerOptions GetBuildPlayerOptions()
-        {
-            WebBuildSettings.Apply();
-            return base.GetBuildPlayerOptions();
-        }
     }
 
     [Serializable]

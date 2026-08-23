@@ -31,14 +31,31 @@ namespace GameDevKit.Editor.AppBuild
             var buildPath = BuildConfig.GetBuildPath();
             Debug.Log($"Building {name} with config: {BuildConfig.ToJsonUnity()}", this);
             await BuildConfig.PreBuildAsync();
+            foreach (var addon in BuildConfig.AddOns)
+            {
+                await addon.PreBuildAsync();
+            }
+            SaveAsset();
 
             var buildPlayerOptions = BuildConfig.GetBuildPlayerOptions();
             BuildPipeline.BuildPlayer(buildPlayerOptions);
             Debug.Log($"Finished building {name}", this);
 
             await BuildConfig.PostBuildAsync();
+            foreach (var addon in BuildConfig.AddOns)
+            {
+                await addon.PostBuildAsync();
+            }
+            SaveAsset();
 
             EditorUtility.RevealInFinder(buildPath);
+        }
+
+        private void SaveAsset()
+        {
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 
         [Button]

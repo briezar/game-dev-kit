@@ -42,6 +42,13 @@ MonoBehaviour:
       name: 
       url: 
       scopes: []
+  - packageId: com.unity.nuget.newtonsoft-json
+    sourceType: 0
+    gitUrl: com.unity.nuget.newtonsoft-json
+    scopedRegistry:
+      name: 
+      url: 
+      scopes: []
   _essentials:
   - packageId: com.yasirkula.assetusagedetector
     sourceType: 0

@@ -12,6 +12,14 @@ namespace GameDevKit.Editor.AppBuild
 
         private iOSBuildSettings _originalSettings;
 
+        public iOSBuildConfig()
+        {
+            BuildOptions = BuildOptions.Development | BuildOptions.CompressWithLz4HC;
+            BuildTarget = BuildTarget.iOS;
+            BuildTargetGroup = BuildTargetGroup.iOS;
+            BuildSuffix = "-dev";
+        }
+
         public override async UniTask PreBuildAsync()
         {
             _originalSettings = iOSBuildSettings.GetCurrentSettings();
@@ -27,11 +35,6 @@ namespace GameDevKit.Editor.AppBuild
             await UniTask.SwitchToMainThread();
         }
 
-        public override BuildPlayerOptions GetBuildPlayerOptions()
-        {
-            iOSBuildSettings.Apply();
-            return base.GetBuildPlayerOptions();
-        }
     }
 
     [Serializable]

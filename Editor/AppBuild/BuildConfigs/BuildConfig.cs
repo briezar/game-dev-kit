@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
@@ -5,14 +7,17 @@ using UnityEngine;
 
 namespace GameDevKit.Editor.AppBuild
 {
+    [Serializable]
     public abstract class BuildConfig
     {
+        public string BuildNameOverride;
         public string BuildFolder = "Builds";
         public string[] ExtraScriptingDefines;
         public BuildOptions BuildOptions;
         public BuildTargetGroup BuildTargetGroup;
         public BuildTarget BuildTarget;
         public string BuildSuffix;
+        [SerializeReference] public List<BuildConfigAddOn> AddOns;
 
         public virtual UniTask PreBuildAsync() => UniTask.CompletedTask;
         public virtual UniTask PostBuildAsync() => UniTask.CompletedTask;
@@ -33,7 +38,7 @@ namespace GameDevKit.Editor.AppBuild
         }
 
         public virtual string GetExtension() => "";
-        public virtual string GetBuildPath() => $"{BuildFolder}/{BuildTarget}/{Application.productName}{BuildSuffix}{GetExtension()}";
+        public virtual string GetBuildPath() => $"{BuildFolder}/{BuildTarget}/{(BuildNameOverride.IsNullOrEmpty() ? Application.productName : BuildNameOverride)}{BuildSuffix}{GetExtension()}";
 
         protected static string[] GetScenes() => EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
     }

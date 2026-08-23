@@ -114,7 +114,7 @@ namespace GameDevKit.Installer
 
             var install = EditorUtility.DisplayDialog(
                 "GameDevKit — Recommended Packages",
-                $"The following recommended packages are not installed:\n\n{GetPackageListing(missingPackages)}\n\nInstall them now?\n\nThis dialog will not show again, you can install from the ${nameof(PackageInstallerSO)}'s Context Menu (top right '...').",
+                $"The following recommended packages are not installed:\n\n{GetPackageListing(missingPackages)}\n\nInstall them now?\n\nThis dialog will not show again, you can install from the {nameof(PackageInstallerSO)}'s Context Menu (top right '...').",
                 "Install", "Skip");
 
             if (install) { PackageUtils.InstallPackages(missingPackages); }

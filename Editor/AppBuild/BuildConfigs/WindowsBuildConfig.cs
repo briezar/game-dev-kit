@@ -12,6 +12,14 @@ namespace GameDevKit.Editor.AppBuild
 
         private WindowsBuildSettings _originalSettings;
 
+        public WindowsBuildConfig()
+        {
+            BuildOptions = BuildOptions.Development | BuildOptions.CompressWithLz4HC;
+            BuildTarget = BuildTarget.StandaloneWindows64;
+            BuildTargetGroup = BuildTargetGroup.Standalone;
+            BuildSuffix = "-dev";
+        }
+
         public override async UniTask PreBuildAsync()
         {
             _originalSettings = WindowsBuildSettings.GetCurrentSettings();
@@ -25,12 +33,6 @@ namespace GameDevKit.Editor.AppBuild
             _originalSettings.Apply();
             Debug.Log($"Restored original Windows build settings:\n{_originalSettings.ToJsonUnity()}");
             await UniTask.SwitchToMainThread();
-        }
-
-        public override BuildPlayerOptions GetBuildPlayerOptions()
-        {
-            WindowsBuildSettings.Apply();
-            return base.GetBuildPlayerOptions();
         }
 
     }

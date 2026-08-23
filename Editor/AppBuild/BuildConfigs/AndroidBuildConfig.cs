@@ -9,8 +9,17 @@ namespace GameDevKit.Editor.AppBuild
     public class AndroidBuildConfig : BuildConfig
     {
         public AndroidBuildSettings AndroidBuildSettings;
+        [Space] public bool AutoIncrementBundleVersionCode;
 
         private AndroidBuildSettings _originalSettings;
+
+        public AndroidBuildConfig()
+        {
+            BuildOptions = BuildOptions.Development | BuildOptions.CompressWithLz4HC;
+            BuildTarget = BuildTarget.Android;
+            BuildTargetGroup = BuildTargetGroup.Android;
+            BuildSuffix = "-dev";
+        }
 
         public override async UniTask PreBuildAsync()
         {
@@ -24,13 +33,21 @@ namespace GameDevKit.Editor.AppBuild
         {
             _originalSettings.Apply();
             Debug.Log($"Restored original Android build settings:\n{_originalSettings.ToJsonUnity()}");
+
+            if (AutoIncrementBundleVersionCode)
+            {
+                var prev = AndroidBuildSettings.BundleVersionCode;
+                AndroidBuildSettings.BundleVersionCode++;
+                Debug.Log($"BundleVersionCode increased from {prev} -> {AndroidBuildSettings.BundleVersionCode}");
+            }
             await UniTask.SwitchToMainThread();
         }
 
-        public override BuildPlayerOptions GetBuildPlayerOptions()
+        public override string GetBuildPath()
         {
-            AndroidBuildSettings.Apply();
-            return base.GetBuildPlayerOptions();
+            var buildName = BuildNameOverride.IsNullOrEmpty() ? Application.productName : BuildNameOverride;
+            var version = $"_{AndroidBuildSettings.BundleVersion}_{AndroidBuildSettings.BundleVersionCode}";
+            return $"{BuildFolder}/{BuildTarget}/{buildName}{BuildSuffix}{version}{GetExtension()}";
         }
 
         public override string GetExtension() => AndroidBuildSettings.BuildAppBundle ? ".aab" : ".apk";
@@ -40,6 +57,7 @@ namespace GameDevKit.Editor.AppBuild
     public class AndroidBuildSettings
     {
         public bool BuildAppBundle;
+        public string BundleVersion;
         public int BundleVersionCode;
         public AndroidSdkVersions MinSdkVersion;
         public AndroidSdkVersions TargetSdkVersion;

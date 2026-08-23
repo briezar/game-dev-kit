@@ -10,11 +10,12 @@ namespace GameDevKit.Editor
     {
         private const string MenuItemPath = EditorConstants.MenuItemPath + "Project Setup/";
 
-        [MenuItem(MenuItemPath + "Create Folder Structure")]
-        public static void CreateFolderStructure()
+        [MenuItem(MenuItemPath + "Setup Folder Structure")]
+        public static void SetupFolderStructure()
         {
-            DirectoryUtils.CreateFolder("_Project", new[] { "Art", "Audio", "Prefabs", "Presets", "Scripts" });
+            DirectoryUtils.CreateFolder("_Project", new[] { "Art", "Audio", "Prefabs", "Presets", "ScriptableObjects", "Scripts", "UI" });
             DirectoryUtils.CreateFolder("_Project/Art", new[] { "Fonts", "Materials", "Shaders", "Sprites" });
+            DirectoryUtils.CreateFolder("_Project/ScriptableObjects", new[] { "Objects", "Scripts" });
 
             DirectoryUtils.MoveInto("_Project", "Scenes");
             DirectoryUtils.MoveInto("Settings", "InputSystem_Actions.inputactions");
@@ -44,9 +45,12 @@ namespace GameDevKit.Editor
             cscSuppressions.UnionWith(argumentMap.Keys);
 
             File.WriteAllLines(cscPath, cscSuppressions);
+            AssetDatabase.Refresh();
+
+            var csc = AssetDatabase.LoadAssetAtPath<DefaultAsset>("Assets/csc.rsp");
 
             var msg = $"Added compiler suppressions through {cscPath}:\n";
-            Debug.Log(msg + argumentMap.JoinToString("{0} ({1})"));
+            Debug.Log(msg + argumentMap.JoinToString("{0} ({1})"), csc);
         }
     }
 }
