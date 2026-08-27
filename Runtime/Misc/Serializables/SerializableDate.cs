@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace GameDevKit
 {
+    /// <summary>
+    /// Represents a UTC timestamp stored as Unix time in milliseconds.
+    /// </summary>
     [Serializable]
     [JsonObject(MemberSerialization.OptIn)]
     public struct SerializableDate : IEquatable<SerializableDate>
@@ -21,13 +24,20 @@ namespace GameDevKit
         public static SerializableDate Now => new(DateTimeOffset.Now);
         public static SerializableDate UtcNow => new(DateTimeOffset.UtcNow);
 
+        /// <summary>
+        /// Gets the stored date in UTC.
+        /// </summary>
         public readonly DateTimeOffset UtcDate => DateTimeOffset.FromUnixTimeMilliseconds(_timestampMs);
+
+        /// <summary>
+        /// Gets the stored date converted to the local time zone.
+        /// </summary>
         public readonly DateTimeOffset LocalDate => DateTimeOffset.FromUnixTimeMilliseconds(_timestampMs).ToLocalTime();
 
         public SerializableDate(DateTimeOffset date) => _timestampMs = date.ToUnixTimeMilliseconds();
 
         public static implicit operator DateTimeOffset(SerializableDate value) => value.UtcDate;
-        public static implicit operator DateTime(SerializableDate value) => value.UtcDate.DateTime;
+        public static implicit operator DateTime(SerializableDate value) => value.UtcDate.UtcDateTime;
 
         public static implicit operator SerializableDate(DateTimeOffset value) => new(value);
         public static implicit operator SerializableDate(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
