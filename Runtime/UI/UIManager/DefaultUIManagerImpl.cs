@@ -18,7 +18,7 @@ namespace GameDevKit.UI
     {
         [SerializeField] private Camera _uiCamera;
         [SerializeField] private EventSystem _eventSystem;
-        [SerializeField] private Canvas _screenUILayer, _overlayUILayer;
+        [SerializeField] private Canvas _screenUILayer, _overlayUILayer, _onTopLayer;
         [SerializeField] private OverlayDim _overlayDim;
         [SerializeField] private ScreenFader _screenFader;
 
@@ -49,9 +49,7 @@ namespace GameDevKit.UI
 
             ReferenceResolution = GetComponentInChildren<CanvasScaler>().referenceResolution;
 
-            var layers = new Transform[] { _screenUILayer.transform, _overlayUILayer.transform };
-
-            foreach (var view in layers.SelectMany(layer => layer.GetComponentsInChildren<UIView>(true)))
+            foreach (var view in GetComponentsInChildren<UIView>(true))
             {
                 AddInstantiatedUI(view);
 
@@ -76,11 +74,26 @@ namespace GameDevKit.UI
         [Button]
         private void EnsureSortingLayer()
         {
-            var canvasLayers = new Canvas[] { _screenUILayer, _overlayUILayer, _overlayDim.canvas, _screenFader.canvas };
-
-            foreach (var canvasLayer in canvasLayers)
+            var canvasLayerMap = new Dictionary<Canvas, string>
             {
-                EditorUtils.CreateSortingLayer(canvasLayer.sortingLayerName, canvasLayer.sortingLayerID);
+                { _screenUILayer, "ScreenUI" },
+                { _overlayUILayer, "OverlayUI" },
+                { _onTopLayer, "OnTop" },
+                { _overlayDim.canvas, "OverlayUI" },
+                { _screenFader.canvas, "OnTop" },
+            };
+
+            const string missingLayerName = "<unknown layer>";
+
+            foreach (var (canvas, defaultLayerName) in canvasLayerMap)
+            {
+                var missing = canvas.sortingLayerName == missingLayerName;
+                if (missing)
+                {
+                    EditorUtils.CreateSortingLayer(defaultLayerName, canvas.sortingLayerID);
+                    Debug.Log($"{canvas} - {defaultLayerName} | {canvas.sortingLayerID}");
+                    canvas.sortingLayerName = defaultLayerName;
+                }
             }
         }
 
@@ -249,14 +262,8 @@ namespace GameDevKit.UI
                 return;
             }
 
-            if (_views.Count < 2)
-            {
-#if UNITY_EDITOR
-                Debug.LogWarning($"[ViewManager] Trying to hide all UIs, ignore this message if hiding {view.GetType().Name} was intended");
-#endif
-            }
-
-            _views.RemoveAll(v => v == null || v.gameObject == null || v == view);
+            var removeCount = _views.RemoveAll(v => v == null || v.gameObject == null || v == view);
+            if (removeCount == 0) { return; }
 
             var hideTask = (view as IUIView).OnHide();
 

@@ -174,7 +174,7 @@ namespace GameDevKit.Editor
             return components;
         }
 
-        public static bool CreateSortingLayer(string sortingLayerName, int? uniqueID = null)
+        public static bool CreateSortingLayer(string sortingLayerName, int? sortingLayerId = null)
         {
             var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
             var sortingLayers = tagManager.FindProperty("m_SortingLayers");
@@ -196,13 +196,32 @@ namespace GameDevKit.Editor
             sortingLayers.InsertArrayElementAtIndex(sortingLayers.arraySize);
             var newLayer = sortingLayers.GetArrayElementAtIndex(sortingLayers.arraySize - 1);
             newLayer.FindPropertyRelative("name").stringValue = sortingLayerName;
-            newLayer.FindPropertyRelative("uniqueID").intValue = uniqueID ?? Random.Range(100000, 999999); // Generate random unique ID
+
+            var uniqueId = sortingLayerId.GetValueOrDefault() != 0 ? sortingLayerId.Value : GetRandomUnityId(false);
+            newLayer.FindPropertyRelative("uniqueID").intValue = uniqueId;
 
             // Apply changes permanently to the project
             tagManager.ApplyModifiedProperties();
-            Debug.Log($"Successfully created Sorting Layer: {sortingLayerName}");
+            Debug.Log($"Successfully created Sorting Layer: {sortingLayerName} with ID: {uniqueId}");
 
             return true;
+        }
+
+        public static int GetRandomUnityId(bool allowNegative = true)
+        {
+            while (true)
+            {
+                var randomId = Random.Range(int.MinValue, int.MaxValue);
+                if (randomId != 0)
+                {
+                    if (!allowNegative)
+                    {
+                        if (randomId == int.MinValue) { randomId++; } // prevent overflow
+                        randomId *= -1;
+                    }
+                    return randomId;
+                }
+            }
         }
     }
 }
