@@ -15,7 +15,7 @@ namespace GameDevKit.Editor.AppBuild
         public BuildConfig BuildConfig;
 
         [ShowInInspector]
-        private string _buildPath => BuildConfig?.GetBuildPath() ?? "N/A";
+        private string BuildPath => BuildConfig?.GetBuildPath() ?? "N/A";
 
         [Button]
         public async UniTask Build()
@@ -74,8 +74,12 @@ namespace GameDevKit.Editor.AppBuild
                 return;
             }
 
-            var directoryInfo = Directory.CreateDirectory(Path.Combine(Application.dataPath, "..", buildPath));
-            Debug.Log(directoryInfo.FullName);
+            var buildDirectory = Path.GetDirectoryName(Path.GetFullPath(buildPath));
+            if (!Directory.Exists(buildDirectory))
+            {
+                Directory.CreateDirectory(buildDirectory);
+                Debug.Log($"Created directory: {buildDirectory}");
+            }
 
             EditorUtility.RevealInFinder(buildPath);
         }
