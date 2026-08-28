@@ -16,15 +16,8 @@ namespace GameDevKit.ObjectReferences
 #if UNITY_EDITOR
         [SerializeField] protected UnityEngine.Object _folderAsset;
 
-        public virtual bool IsAssetValid
-        {
-            get
-            {
-                if (_folderAsset == null) return false;
-
-                return AssetDatabase.IsValidFolder(GetAssetPath());
-            }
-        }
+        protected virtual bool IsAssetValid => IsFolder;
+        protected bool IsFolder => _folderAsset != null && AssetDatabase.IsValidFolder(GetAssetPath());
 #endif
 
         // This should only ever be set during serialization/deserialization!
@@ -56,8 +49,6 @@ namespace GameDevKit.ObjectReferences
 #endif
         }
 
-
-
 #if UNITY_EDITOR
         protected UnityEngine.Object GetFolderAsset()
         {
@@ -71,40 +62,36 @@ namespace GameDevKit.ObjectReferences
 
         protected virtual void HandleBeforeSerialize()
         {
-            var isValid = IsAssetValid;
-
-            if (isValid)
-            {
-                _folderPath = GetAssetPath();
-                return;
-            }
-
             if (_folderAsset == null)
             {
                 _folderPath = string.Empty;
                 return;
             }
 
-            // Asset is set with invalid type
-            Debug.LogError($"{_folderAsset.name} is invalid!");
-
-            // Try recover from path
-            _folderAsset = GetFolderAsset();
-            if (_folderAsset == null)
+            if (!IsAssetValid)
             {
-                _folderPath = string.Empty;
+                Debug.LogError($"{_folderAsset.name} must be a folder!");
+
+                // Try recover from path
+                _folderAsset = GetFolderAsset();
+                if (_folderAsset == null)
+                {
+                    _folderPath = string.Empty;
+                }
+
                 return;
             }
+
+            _folderPath = GetAssetPath();
 
             EditorUtility.SetDirty(_folderAsset);
-
         }
 
         private void HandleAfterDeserialize()
         {
             EditorApplication.update -= HandleAfterDeserialize;
             // Asset is valid, don't do anything - Path will always be set based on it when it matters
-            if (IsAssetValid) { return; }
+            if (!IsFolder) { return; }
 
             if (string.IsNullOrEmpty(_folderPath)) { return; }
 

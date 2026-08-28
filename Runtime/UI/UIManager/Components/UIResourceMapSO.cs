@@ -15,11 +15,12 @@ namespace GameDevKit.UI
         [HelpBox("This will be auto-filled.", drawAbove: true)]
         [SerializeField] private SerializedDictionary<string, string> _uiResourceMap;
 
+        public const string MenuName = "GameDevKit/UI/UIResourceMap";
+
 #if UNITY_EDITOR
         [HelpBox("The Resources folder that holds all your UI. Folder structure doesn't matter, just need to be inside a Resources folder.", drawAbove: true)]
         [SerializeField] private ResourcesFolderReference _uiFolder;
 
-        public const string MenuName = "GameDevKit/UI/UIResourceMap";
         private static UIResourceMapSO _instance;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
