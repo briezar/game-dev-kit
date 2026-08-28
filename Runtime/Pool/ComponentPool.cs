@@ -45,11 +45,11 @@ namespace GameDevKit.Pool
 
         public Transform Container => _container;
 
-        /// <summary> Editing this can affect prefab data if template is a prefab!  </summary>
+        /// <summary> Editing this can affect prefab data if template is a prefab! </summary>
         public T OriginalTemplate => _template;
 
         /// <summary> 
-        /// Editing this will affect all subsequent Get() calls. Be careful! Use this to set default values. <br/>
+        /// Be careful! Editing this will affect all subsequent Get() calls. Use this to set default values. <br/>
         /// This can also affect prefab data if template is a prefab and <see cref="EnsureSceneTemplate"/> is false.
         /// </summary>
         public T Template
@@ -60,7 +60,7 @@ namespace GameDevKit.Pool
                 if (_sceneTemplate != null) { return _sceneTemplate; }
 
                 _sceneTemplate = _template.IsPrefab() ? Object.Instantiate(_template, Container) : _template;
-                _sceneTemplate.gameObject.SetActive(false);
+                HideSceneTemplate();
                 return _sceneTemplate;
             }
         }
@@ -82,6 +82,12 @@ namespace GameDevKit.Pool
             _ensureSceneTemplate = ensureSceneTemplate;
         }
 
+        private void HideSceneTemplate()
+        {
+            if (_sceneTemplate == null) { return; }
+            _sceneTemplate.gameObject.SetActive(false);
+        }
+
         public void ReplaceTemplate(T newTemplate)
         {
             ClearAll();
@@ -91,6 +97,7 @@ namespace GameDevKit.Pool
                 _sceneTemplate = null;
             }
             _template = newTemplate;
+            _ = Template;
         }
 
         /// <summary>
@@ -121,8 +128,9 @@ namespace GameDevKit.Pool
             }
         }
 
-        public void Prepare(int minCount)
+        public void Prepare(int minCount = 0)
         {
+            HideSceneTemplate();
             var currentCount = _inactiveStack.Count + _activeSet.Count;
             for (int i = 0; i < minCount - currentCount; i++)
             {
@@ -207,8 +215,10 @@ namespace GameDevKit.Pool
 
         public void ReleaseAll(bool resetTransform = true)
         {
+            HideSceneTemplate();
             foreach (var element in _activeSet)
             {
+                if (element == null) { continue; }
                 InternalRelease(element, resetTransform);
             }
 

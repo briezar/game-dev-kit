@@ -133,7 +133,7 @@ public static class UnityObjectExtensions
         DestroyGameObject(component.gameObject);
     }
 
-    public static void DestroyGameObjectImmediate(this GameObject gameObject)
+    public static void DestroyImmediate(this GameObject gameObject)
     {
         if (gameObject == null) { return; }
         Object.DestroyImmediate(gameObject);
@@ -141,7 +141,7 @@ public static class UnityObjectExtensions
     public static void DestroyGameObjectImmediate(this Component component)
     {
         if (component == null) { return; }
-        DestroyGameObjectImmediate(component.gameObject);
+        DestroyImmediate(component.gameObject);
     }
 
     public static bool TryGetComponentInParent<T>(this GameObject gameObject, out T component)
@@ -199,12 +199,12 @@ public static class UnityObjectExtensions
     public static RectTransform GetRectTransform(this Component component) => (RectTransform)component.transform;
     public static RectTransform GetRectTransform(this GameObject gameObject) => (RectTransform)gameObject.transform;
 
-    public static void DestroyAllChildren(this Transform parent)
+    public static void DestroyAllChildren(this Transform parent, Func<Transform, bool> condition = null)
     {
         for (int i = parent.childCount - 1; i >= 0; i--)
         {
             var child = parent.GetChild(i);
-            child.DestroyGameObject();
+            if (condition == null || condition(child)) { child.DestroyGameObject(); }
         }
     }
 
