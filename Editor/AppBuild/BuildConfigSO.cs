@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
@@ -14,6 +15,9 @@ namespace GameDevKit.Editor.AppBuild
         [SerializeReference, SubclassPicker]
         public BuildConfig BuildConfig;
 
+        [SerializeReference, SubclassPicker]
+        public List<BuildConfigAddOn> AddOns;
+
         [ShowInInspector]
         private string BuildPath => BuildConfig?.GetBuildPath() ?? "N/A";
 
@@ -28,27 +32,30 @@ namespace GameDevKit.Editor.AppBuild
 
             if (!EditorUtility.DisplayDialog("Confirm Build", $"Are you sure you want to build?", "Yes", "No")) { return; }
 
-            var buildPath = BuildConfig.GetBuildPath();
             Debug.Log($"Building {name} with config: {BuildConfig.ToJsonUnity()}", this);
             await BuildConfig.PreBuildAsync();
-            foreach (var addon in BuildConfig.AddOns)
+            foreach (var addon in AddOns)
             {
+                addon.BuildConfig = BuildConfig;
                 await addon.PreBuildAsync();
             }
             SaveAsset();
 
             var buildPlayerOptions = BuildConfig.GetBuildPlayerOptions();
-            BuildPipeline.BuildPlayer(buildPlayerOptions);
-            Debug.Log($"Finished building {name}", this);
+            var buildReport = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            Debug.Log($"Finished building {name}. Result: {buildReport.summary.result}", this);
 
-            await BuildConfig.PostBuildAsync();
-            foreach (var addon in BuildConfig.AddOns)
+            await BuildConfig.PostBuildAsync(buildReport);
+            foreach (var addon in AddOns)
             {
-                await addon.PostBuildAsync();
+                await addon.PostBuildAsync(buildReport);
             }
             SaveAsset();
 
-            EditorUtility.RevealInFinder(buildPath);
+            if (buildReport.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            {
+                EditorUtility.RevealInFinder(BuildPath);
+            }
         }
 
         private void SaveAsset()

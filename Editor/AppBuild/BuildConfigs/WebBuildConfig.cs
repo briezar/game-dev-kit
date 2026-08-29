@@ -2,6 +2,8 @@ using System;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEditor.Build.Reporting;
+
 
 #if UNITY_WEBGL
 using UnityEditor.WebGL;
@@ -48,7 +50,7 @@ namespace GameDevKit.Editor.AppBuild
             await UniTask.SwitchToMainThread();
         }
 
-        public override async UniTask PostBuildAsync()
+        public override async UniTask PostBuildAsync(BuildReport buildReport)
         {
             _originalSettings.Apply();
             Debug.Log($"Restored original Web build settings:\n{_originalSettings.ToJsonUnity()}");

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 namespace GameDevKit.Editor.AppBuild
@@ -17,10 +18,9 @@ namespace GameDevKit.Editor.AppBuild
         public BuildTargetGroup BuildTargetGroup;
         public BuildTarget BuildTarget;
         public string BuildSuffix;
-        [SerializeReference] public List<BuildConfigAddOn> AddOns;
 
         public virtual UniTask PreBuildAsync() => UniTask.CompletedTask;
-        public virtual UniTask PostBuildAsync() => UniTask.CompletedTask;
+        public virtual UniTask PostBuildAsync(BuildReport buildReport) => UniTask.CompletedTask;
 
         public virtual BuildPlayerOptions GetBuildPlayerOptions()
         {

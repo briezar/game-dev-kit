@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 namespace GameDevKit.Editor.AppBuild
@@ -28,7 +29,7 @@ namespace GameDevKit.Editor.AppBuild
             await UniTask.SwitchToMainThread();
         }
 
-        public override async UniTask PostBuildAsync()
+        public override async UniTask PostBuildAsync(BuildReport buildReport)
         {
             _originalSettings.Apply();
             Debug.Log($"Restored original Windows build settings:\n{_originalSettings.ToJsonUnity()}");
