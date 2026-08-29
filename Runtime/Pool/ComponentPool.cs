@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Pool;
 using Object = UnityEngine.Object;
 
 namespace GameDevKit.Pool
@@ -41,7 +43,7 @@ namespace GameDevKit.Pool
         public Action<T> OnRelease { get; set; }
 
         public IReadOnlyCollection<T> ActiveElements => _activeSet;
-        public IReadOnlyCollection<T> InactiveElements => _inactiveStack;
+        public IReadOnlyCollection<T> InactiveElements => _inactiveSet;
 
         public Transform Container => _container;
 
@@ -67,12 +69,14 @@ namespace GameDevKit.Pool
 
         public bool EnsureSceneTemplate => _ensureSceneTemplate;
 
+        private ObjectPool<T> _internalPool;
+        public ObjectPool<T> InternalPool => _internalPool ??= CreatePool();
+
         private readonly HashSet<T> _activeSet = new();
-        private readonly Stack<T> _inactiveStack = new();
+        private readonly HashSet<T> _inactiveSet = new();
+        private readonly Dictionary<T, Action<T>> _pendingUpdates = new();
 
         private T _sceneTemplate;
-
-        private readonly Dictionary<T, Action<T>> _pendingUpdates = new();
 
         protected ComponentPool() { }
         public ComponentPool(T template, Transform container, bool ensureSceneTemplate = true)
@@ -80,6 +84,18 @@ namespace GameDevKit.Pool
             _template = template;
             _container = container;
             _ensureSceneTemplate = ensureSceneTemplate;
+        }
+
+        private ObjectPool<T> CreatePool()
+        {
+            return new ObjectPool<T>(
+                createFunc: InstantiateElement,
+                actionOnGet: HandleOnGet,
+                actionOnRelease: HandleOnRelease,
+                actionOnDestroy: DestroyElement,
+                collectionCheck: true,
+                defaultCapacity: 10,
+                maxSize: 1000);
         }
 
         private void HideSceneTemplate()
@@ -109,7 +125,7 @@ namespace GameDevKit.Pool
         {
             updateAction?.Invoke(Template);
 
-            foreach (var element in _inactiveStack)
+            foreach (var element in _inactiveSet)
             {
                 updateAction?.Invoke(element);
             }
@@ -131,12 +147,11 @@ namespace GameDevKit.Pool
         public void Prepare(int minCount = 0)
         {
             HideSceneTemplate();
-            var currentCount = _inactiveStack.Count + _activeSet.Count;
+            var currentCount = _activeSet.Count + _inactiveSet.Count;
             for (int i = 0; i < minCount - currentCount; i++)
             {
                 var element = InstantiateElement();
-                element.gameObject.SetActive(false);
-                _inactiveStack.Push(element);
+                Release(element, true);
             }
         }
 
@@ -147,49 +162,24 @@ namespace GameDevKit.Pool
             return element;
         }
 
-        public T Get(bool activate = true)
+        private void HandleOnGet(T element)
         {
-            T element;
-
-            while (_inactiveStack.TryPop(out element) && element == null) { }
-
-            if (element == null)
-            {
-                element = InstantiateElement();
-            }
-
-            if (activate)
-            {
-                element.gameObject.SetActive(true);
-            }
-
+            if (element == null) { return; }
             _activeSet.Add(element);
-
-            OnGet?.Invoke(element);
-            if (element is IPoolableObject poolableObject)
-            {
-                poolableObject.HandleOnGet();
-            }
-            return element;
-
+            _inactiveSet.Remove(element);
         }
 
-        public void Release(T element, bool resetTransform = true)
+        private void HandleOnRelease(T element)
         {
-            if (element == Template) { return; }
-            if (element == null)
-            {
-                _activeSet.RemoveWhere(match => match == null);
-                return;
-            }
-
-            if (!_activeSet.Remove(element)) { return; }
-
-            InternalRelease(element, resetTransform);
+            if (element == null) { return; }
+            _activeSet.Remove(element);
+            _inactiveSet.Add(element);
         }
 
-        private void InternalRelease(T element, bool resetTransform = true)
+        private void PrepareForRelease(T element, bool resetTransform)
         {
+            if (element == null) { return; }
+
             element.gameObject.SetActive(false);
             element.transform.SetParent(Container);
 
@@ -209,44 +199,95 @@ namespace GameDevKit.Pool
             {
                 updateAction?.Invoke(element);
             }
+        }
 
-            _inactiveStack.Push(element);
+        private void DestroyElement(T element)
+        {
+            if (element == null) { return; }
+            _activeSet.Remove(element);
+            _inactiveSet.Remove(element);
+            _pendingUpdates.Remove(element);
+            Object.Destroy(element.gameObject);
+        }
+
+        public T Get(bool activate = true)
+        {
+            var element = InternalPool.Get();
+            element.gameObject.SetActive(activate);
+
+            OnGet?.Invoke(element);
+            if (element is IPoolableObject poolableObject)
+            {
+                poolableObject.HandleOnGet();
+            }
+
+            return element;
+        }
+
+        public void Add(T element, bool resetTransform = true)
+        {
+            if (element == Template) { return; }
+            if (element == null) { return; }
+
+            _activeSet.Remove(element);
+            PrepareForRelease(element, resetTransform);
+            InternalPool.Release(element);
+        }
+
+        public void Release(T element, bool resetTransform = true)
+        {
+            if (element == Template) { return; }
+            if (element == null)
+            {
+                _activeSet.RemoveWhere(match => match == null);
+                return;
+            }
+
+            if (!_activeSet.Remove(element)) { return; }
+            PrepareForRelease(element, resetTransform);
+            InternalPool.Release(element);
         }
 
         public void ReleaseAll(bool resetTransform = true)
         {
             HideSceneTemplate();
-            foreach (var element in _activeSet)
+            foreach (var element in _activeSet.ToArray())
             {
                 if (element == null) { continue; }
-                InternalRelease(element, resetTransform);
+                Release(element, resetTransform);
             }
-
-            _activeSet.Clear();
         }
 
         public void ClearAll()
         {
-            ClearActive();
-            ClearInactive();
+            _activeSet.Clear();
+            _inactiveSet.Clear();
+            _pendingUpdates.Clear();
+            InternalPool.Clear();
         }
 
         public void ClearActive()
         {
-            foreach (var element in _activeSet)
+            foreach (var element in _activeSet.ToArray())
             {
-                Object.Destroy(element.gameObject);
+                if (element == null) { continue; }
+                DestroyElement(element);
             }
+
             _activeSet.Clear();
+            _pendingUpdates.Clear();
         }
 
         public void ClearInactive()
         {
-            foreach (var element in _inactiveStack)
+            foreach (var element in _inactiveSet.ToArray())
             {
-                Object.Destroy(element.gameObject);
+                if (element == null) { continue; }
+                DestroyElement(element);
             }
-            _inactiveStack.Clear();
+
+            _inactiveSet.Clear();
+            _pendingUpdates.Clear();
         }
     }
 

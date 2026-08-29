@@ -7,7 +7,19 @@ using UnityEngine.SceneManagement;
 
 namespace GameDevKit.SceneManagement
 {
-    public record struct ProgressInfo(float TargetProgress, float EstimatedDuration, string Message);
+    public struct ProgressInfo
+    {
+        public float TargetProgress;
+        public float EstimatedDuration;
+        public string Message;
+
+        public ProgressInfo(float targetProgress, float estimatedDuration, string message)
+        {
+            TargetProgress = targetProgress;
+            EstimatedDuration = estimatedDuration;
+            Message = message;
+        }
+    }
 
     [DefaultExecutionOrder(-1000)]
     public abstract class SceneFlow : MonoBehaviour
@@ -45,73 +57,20 @@ namespace GameDevKit.SceneManagement
             return _activeSceneFlows.Find(s => s.gameObject.scene == activeScene);
         }
 
-        private static void SanitizeSceneName(ref string sceneName) => sceneName = sceneName.RemoveFirst("Assets/").RemoveLast(".unity");
-
         public static async UniTask<SceneFlow> LoadScene(string sceneName, LoadSceneMode mode = LoadSceneMode.Additive, Action<float> progressCallback = null)
         {
-            SanitizeSceneName(ref sceneName);
-            var sceneOp = SceneManager.LoadSceneAsync(sceneName, mode);
-            while (!sceneOp.isDone)
-            {
-                progressCallback?.Invoke(sceneOp.progress);
-                await UniTask.Yield();
-            }
-
-            var scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+            var scene = await SceneUtils.LoadScene(sceneName, mode, progressCallback);
             return FindInScene(scene);
-        }
-
-        public readonly struct SceneActivationHandle
-        {
-            public readonly string SceneName;
-
-            private readonly AsyncOperation _sceneOp;
-
-            public SceneActivationHandle(string sceneName, AsyncOperation sceneOp)
-            {
-                SceneName = sceneName;
-                _sceneOp = sceneOp;
-            }
-
-            public async UniTask<SceneFlow> Activate()
-            {
-                _sceneOp.allowSceneActivation = true;
-                await _sceneOp;
-
-                var scene = SceneManager.GetSceneByName(SceneName);
-                return FindInScene(scene);
-            }
-        }
-
-        /// <summary>
-        /// Loads a scene without activating it.
-        /// The returned AsyncOperation will complete when the scene is loaded and ready to be activated, but the scene will not be activated until allowSceneActivation is set to true.
-        /// </summary>
-        public static async UniTask<SceneActivationHandle> LoadSceneWithoutActivation(string sceneName, LoadSceneMode mode = LoadSceneMode.Additive, Action<float> progressCallback = null)
-        {
-            SanitizeSceneName(ref sceneName);
-            var sceneOp = SceneManager.LoadSceneAsync(sceneName, mode);
-            sceneOp.allowSceneActivation = false;
-            while (sceneOp.progress < 0.9f)
-            {
-                progressCallback?.Invoke(sceneOp.progress);
-                await UniTask.Yield();
-            }
-            return new SceneActivationHandle(sceneName, sceneOp);
-        }
-
-        public static async UniTask UnloadScene(string sceneName)
-        {
-            SanitizeSceneName(ref sceneName);
-            var scene = SceneManager.GetSceneByName(sceneName);
-            if (scene.isLoaded)
-            {
-                await SceneManager.UnloadSceneAsync(scene);
-            }
         }
 
         public static SceneFlow FindInScene(Scene scene)
         {
+            if (!scene.IsValid())
+            {
+                Debug.LogError($"Invalid scene: {scene}");
+                return null;
+            }
+
             foreach (var obj in scene.GetRootGameObjects())
             {
                 if (obj.TryGetComponentInChildren(out SceneFlow sceneFlow))

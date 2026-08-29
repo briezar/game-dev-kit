@@ -223,6 +223,34 @@ namespace GameDevKit.Editor
                 }
             }
         }
+
+        [MenuItem("Tools/Enable Mesh Read-Write")]
+        private static void EnableMeshReadWrite()
+        {
+            // Processes selected Hierarchy GameObjects and Project panel Mesh assets
+            foreach (Object obj in Selection.objects)
+            {
+                if (obj is not Mesh)
+                {
+                    Debug.LogWarning($"{obj} is not a mesh asset.", obj);
+                    continue;
+                }
+
+                var so = new SerializedObject(obj);
+                var isReadableProp = so.FindProperty("m_IsReadable");
+
+                if (isReadableProp != null)
+                {
+                    isReadableProp.boolValue = true;
+                    so.ApplyModifiedProperties();
+                }
+                else
+                {
+                    Debug.LogWarning($"Property `m_IsReadable` is not found on asset.", obj);
+                }
+            }
+            AssetDatabase.SaveAssets();
+        }
     }
 }
 

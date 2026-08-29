@@ -29,6 +29,15 @@ namespace GameDevKit.SceneManagement
     }
 
     [Serializable]
+    public class AdditiveSceneTransition : ISceneTransition
+    {
+        public async UniTask Execute(SceneDefinitionSO scene, SceneTransitionOptions options = default)
+        {
+            SceneFlow.LoadScene(scene.Scene.Path, LoadSceneMode.Additive);
+        }
+    }
+
+    [Serializable]
     public class UIManagerFadeTransition : ISceneTransition
     {
         public async UniTask Execute(SceneDefinitionSO scene, SceneTransitionOptions options = default)
@@ -38,15 +47,16 @@ namespace GameDevKit.SceneManagement
             options.OnTransitionInComplete?.Invoke();
 
             var unloadTasks = scene.ScenesToUnload.Where(s => s.LoadedScene.IsValid()).Select(s => SceneManager.UnloadSceneAsync(s.Path).ToUniTask()).ToArray();
-            var loadTask = SceneFlow.LoadSceneWithoutActivation(scene.Scene.Path);
+            var loadTask = SceneUtils.LoadSceneWithoutActivation(scene.Scene.Path);
 
             await UniTask.WhenAll(unloadTasks);
 
             var sceneHandle = await loadTask;
-            var sceneFlow = await sceneHandle.Activate();
+            var newScene = await sceneHandle.Activate();
 
-            if (sceneFlow != null)
+            if (newScene.IsValid())
             {
+                var sceneFlow = SceneFlow.FindInScene(newScene);
                 await sceneFlow.PrepareScene();
             }
 

@@ -208,6 +208,15 @@ public static class UnityObjectExtensions
         }
     }
 
+    public static void DestroyAllChildrenImmediate(this Transform parent, Func<Transform, bool> condition = null)
+    {
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            var child = parent.GetChild(i);
+            if (condition == null || condition(child)) { child.DestroyGameObjectImmediate(); }
+        }
+    }
+
     public static IEnumerable<Transform> EnumerateChildren(this Transform parent, Func<Transform, bool> condition = null)
     {
         var count = parent.childCount;

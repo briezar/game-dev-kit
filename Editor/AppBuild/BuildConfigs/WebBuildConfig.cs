@@ -3,6 +3,10 @@ using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
+#if UNITY_WEBGL
+using UnityEditor.WebGL;
+#endif
+
 namespace GameDevKit.Editor.AppBuild
 {
     [Serializable]
@@ -14,10 +18,26 @@ namespace GameDevKit.Editor.AppBuild
 
         public WebBuildConfig()
         {
-            BuildOptions = BuildOptions.Development | BuildOptions.CompressWithLz4HC;
+            BuildOptions = BuildOptions.Development;
             BuildTarget = BuildTarget.WebGL;
             BuildTargetGroup = BuildTargetGroup.WebGL;
             BuildSuffix = "-dev";
+
+            WebBuildSettings = new()
+            {
+                ClientBrowserType = WebGLClientBrowserType.Default,
+                TextureSubtarget = WebGLTextureSubtarget.Generic,
+#if UNITY_WEBGL_API
+                CodeOptimization = WasmCodeOptimization.BuildTimes,
+#endif
+                CompressionFormat = WebGLCompressionFormat.Gzip,
+                NameFilesAsHashes = false,
+                DataCaching = true,
+                DebugSymbolMode = WebGLDebugSymbolMode.Off,
+                ShowDiagnostics = false,
+                DecompressionFallback = true,
+                PowerPreference = WebGLPowerPreference.HighPerformance,
+            };
         }
 
         public override async UniTask PreBuildAsync()
@@ -42,6 +62,9 @@ namespace GameDevKit.Editor.AppBuild
     {
         public WebGLClientBrowserType ClientBrowserType;
         public WebGLTextureSubtarget TextureSubtarget;
+#if UNITY_WEBGL
+        public WasmCodeOptimization CodeOptimization;
+#endif
 
         public WebGLCompressionFormat CompressionFormat;
         public bool NameFilesAsHashes;
@@ -55,6 +78,9 @@ namespace GameDevKit.Editor.AppBuild
         {
             EditorUserBuildSettings.webGLClientBrowserType = ClientBrowserType;
             EditorUserBuildSettings.webGLBuildSubtarget = TextureSubtarget;
+#if UNITY_WEBGL
+            UserBuildSettings.codeOptimization = CodeOptimization;
+#endif
 
             PlayerSettings.WebGL.compressionFormat = CompressionFormat;
             PlayerSettings.WebGL.nameFilesAsHashes = NameFilesAsHashes;
@@ -71,6 +97,9 @@ namespace GameDevKit.Editor.AppBuild
             {
                 ClientBrowserType = EditorUserBuildSettings.webGLClientBrowserType,
                 TextureSubtarget = EditorUserBuildSettings.webGLBuildSubtarget,
+#if UNITY_WEBGL
+                CodeOptimization = UserBuildSettings.codeOptimization,
+#endif
 
                 CompressionFormat = PlayerSettings.WebGL.compressionFormat,
                 NameFilesAsHashes = PlayerSettings.WebGL.nameFilesAsHashes,
