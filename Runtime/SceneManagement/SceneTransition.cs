@@ -40,9 +40,12 @@ namespace GameDevKit.SceneManagement
     [Serializable]
     public class UIManagerFadeTransition : ISceneTransition
     {
+        public float FadeInDuration = 0.5f;
+        public float FadeOutDuration = 0.5f;
+
         public async UniTask Execute(SceneDefinitionSO scene, SceneTransitionOptions options = default)
         {
-            await UIManager.FadeTransition(FadeSetting.FadeIn());
+            await UIManager.FadeTransition(FadeSetting.FadeIn(FadeInDuration));
 
             options.OnTransitionInComplete?.Invoke();
 
@@ -61,7 +64,7 @@ namespace GameDevKit.SceneManagement
             }
 
             options.OnTransitionOutStart?.Invoke();
-            await UIManager.FadeTransition(FadeSetting.FadeOut());
+            await UIManager.FadeTransition(FadeSetting.FadeOut(FadeOutDuration));
 
             options.OnComplete?.Invoke();
         }
