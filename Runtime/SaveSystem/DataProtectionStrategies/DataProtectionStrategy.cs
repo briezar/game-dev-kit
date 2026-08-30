@@ -49,6 +49,15 @@ namespace GameDevKit.DataPersistence
             ArrayPool<byte>.Shared.Return(hashBuffer);
         }
 
+        public void DeleteHash(string savePath)
+        {
+            string hashPath = savePath + ".hash";
+            if (File.Exists(hashPath))
+            {
+                File.Delete(hashPath);
+            }
+        }
+
         public uint ReadHash(string savePath)
         {
             string hashPath = savePath + ".hash";

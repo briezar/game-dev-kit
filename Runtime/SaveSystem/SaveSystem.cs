@@ -125,6 +125,26 @@ namespace GameDevKit.DataPersistence
             try
             {
                 var data = InternalLoad(savePath);
+                if (data == null)
+                {
+                    if (DataProtection.UseBackup)
+                    {
+                        var backupPath = DataProtection.GetBackupPath(savePath);
+                        if (File.Exists(backupPath))
+                        {
+                            Debug.LogWarning($"Main save missing at [{savePath}], trying backup at [{backupPath}]");
+                            var backupData = InternalLoad(backupPath);
+                            if (backupData != null)
+                            {
+                                result = Serialization.Deserialize<T>(backupData);
+                                return result;
+                            }
+                        }
+                    }
+
+                    return default;
+                }
+
                 result = Serialization.Deserialize<T>(data);
 
                 if (!DataProtection.AllowTampering)
@@ -144,8 +164,15 @@ namespace GameDevKit.DataPersistence
                 {
                     var backupPath = DataProtection.GetBackupPath(savePath);
                     Debug.LogWarning($"Trying to load backup save from [{backupPath}]");
-                    var data = InternalLoad(backupPath);
-                    result = Serialization.Deserialize<T>(data);
+                    var backupData = InternalLoad(backupPath);
+                    if (backupData == null)
+                    {
+                        result = default;
+                    }
+                    else
+                    {
+                        result = Serialization.Deserialize<T>(backupData);
+                    }
                 }
                 else
                 {
@@ -161,6 +188,7 @@ namespace GameDevKit.DataPersistence
             try
             {
                 File.Delete(savePath);
+                DataProtection.DeleteHash(savePath);
                 if (DataProtection.UseBackup)
                 {
                     File.Delete(DataProtection.GetBackupPath(savePath));
