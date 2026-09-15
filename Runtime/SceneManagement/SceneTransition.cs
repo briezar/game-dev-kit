@@ -33,7 +33,24 @@ namespace GameDevKit.SceneManagement
     {
         public async UniTask Execute(SceneDefinitionSO scene, SceneTransitionOptions options = default)
         {
-            SceneFlow.LoadScene(scene.Scene.Path, LoadSceneMode.Additive);
+            options.OnTransitionInComplete?.Invoke();
+
+            var unloadTasks = scene.ScenesToUnload.Where(s => s.LoadedScene.IsValid()).Select(s => SceneManager.UnloadSceneAsync(s.Path).ToUniTask()).ToArray();
+            var loadTask = SceneUtils.LoadSceneWithoutActivation(scene.Scene.Path);
+
+            await UniTask.WhenAll(unloadTasks);
+
+            var sceneHandle = await loadTask;
+            var newScene = await sceneHandle.Activate();
+
+            if (newScene.IsValid())
+            {
+                var sceneFlow = SceneFlow.FindInScene(newScene);
+                if (sceneFlow != null) { await sceneFlow.PrepareScene(); }
+            }
+
+            options.OnTransitionOutStart?.Invoke();
+            options.OnComplete?.Invoke();
         }
     }
 
