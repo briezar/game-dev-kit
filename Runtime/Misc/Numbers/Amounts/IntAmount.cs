@@ -57,8 +57,12 @@ namespace GameDevKit
 
     }
 
+    /// <summary>
+    /// Represents a loot table for randomly selecting an IntAmount item based on weights.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
-    public struct IntRandomAmount<T>
+    public struct IntAmountLootTable<T>
     {
         public IntWeightedAmount<T>[] items;
 

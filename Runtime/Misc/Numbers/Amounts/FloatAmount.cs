@@ -14,8 +14,12 @@ namespace GameDevKit
         public FloatAmount(T item, float amount = 0) => (this.item, this.amount) = (item, amount);
     }
 
+    /// <summary>
+    /// Represents a loot table for randomly selecting a FloatAmount item based on weights.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
-    public struct FloatRandomAmount<T>
+    public struct FloatAmountLootTable<T>
     {
         public FloatWeightedAmount<T>[] items;
 
