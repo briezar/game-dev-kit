@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using GameDevKit.EventProxies;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -334,4 +335,6 @@ public static class UnityObjectExtensions
         child.SetParent(parent, worldPositionStays: false);
         child.position = position;
     }
+
+    public static void MoveToScene(this GameObject gameObject, Scene scene) => SceneManager.MoveGameObjectToScene(gameObject, scene);
 }
