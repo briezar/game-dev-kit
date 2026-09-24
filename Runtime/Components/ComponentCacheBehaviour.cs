@@ -20,6 +20,7 @@ namespace GameDevKit
 
         public void Cache(Component component)
         {
+            if (component == null) { return; }
             if (_components.Contains(component)) { return; }
             _components.Add(component);
         }
@@ -58,7 +59,7 @@ namespace GameDevKit
         }
     }
 
-    public class ComponentCacheObject : MonoBehaviour, IComponentCache
+    public class ComponentCacheBehaviour : MonoBehaviour, IComponentCache
     {
         [Tooltip("Toggle this to debug which component was cached")]
         [SerializeField] private bool _debug;
@@ -82,15 +83,41 @@ namespace GameDevKit
                             Debug.Log($"Cached {component}", component);
                         }
                     }
-                    _cachedComponents = null;
 
                 }
                 return _internalCache;
             }
         }
 
+        public T FindAndCache<T>(bool findInChildren = true, bool findInParent = false) where T : Component
+        {
+            T component = null;
+            if (!findInChildren && !findInParent)
+            {
+                component = GetComponent<T>();
+            }
+            if (findInChildren)
+            {
+                component = GetComponentInChildren<T>();
+            }
+            if (component == null && findInParent && transform.parent != null)
+            {
+                component = transform.parent.GetComponentInParent<T>();
+            }
+            if (component != null)
+            {
+                Cache(component);
+            }
+            return component;
+        }
+        public T GetOrFind<T>(bool findInChildren = true, bool findInParent = false) where T : Component => Get<T>() ?? FindAndCache<T>(findInChildren, findInParent);
+
         public void Cache(Component component) => _cache.Cache(component);
         public T Get<T>(int index = 0) where T : Component => _cache.Get<T>(index);
-        public void ClearCache() => _cache.ClearCache();
+        public void ClearCache()
+        {
+            _cache.ClearCache();
+            _internalCache = null;
+        }
     }
 }
