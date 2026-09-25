@@ -110,6 +110,12 @@ public static class UnityObjectExtensions
 {
     public static T OrNull<T>(this T obj) where T : Object => obj ? obj : null;
 
+    /// <summary>
+    /// Interface null check does not cover UnityEngine.Object destruction.
+    /// This method checks if the given object is true null or destroyed if it is a UnityEngine.Object instance.
+    /// </summary>
+    public static bool IsNullOrDestroyed(this object obj) => obj is null || obj is Object unityObj && unityObj == null;
+
     public static bool IsDestroyedOrDisabled(this MonoBehaviour behaviour) => behaviour == null || !behaviour.isActiveAndEnabled;
 
     public static bool IsPrefab(this Component component) => IsPrefab(component.gameObject);
