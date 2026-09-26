@@ -343,4 +343,14 @@ public static class UnityObjectExtensions
     }
 
     public static void MoveToScene(this GameObject gameObject, Scene scene) => SceneManager.MoveGameObjectToScene(gameObject, scene);
+
+    public static int CompareDistance(this Transform transform, Transform other) => CompareDistance(transform, other, out _, out _);
+    public static int CompareDistance(this Transform transform, Transform other, out float higherDistanceSqr, out float lowerDistanceSqr)
+    {
+        var distanceSqrA = (transform.position - other.position).sqrMagnitude;
+        var distanceSqrB = (other.position - transform.position).sqrMagnitude;
+        higherDistanceSqr = Mathf.Max(distanceSqrA, distanceSqrB);
+        lowerDistanceSqr = Mathf.Min(distanceSqrA, distanceSqrB);
+        return distanceSqrA.CompareTo(distanceSqrB);
+    }
 }
