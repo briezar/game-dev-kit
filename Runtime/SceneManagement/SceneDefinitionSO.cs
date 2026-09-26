@@ -30,19 +30,20 @@ namespace GameDevKit.SceneManagement
 
         public UniTask LoadRequiredScenes() => UniTask.WhenAll(RequiredScenes.Select(EnsureLoadedAsync));
 
-        public async UniTask UnloadScene()
+        public async UniTask<bool> UnloadScene()
         {
             if (!Scene.ExistsInBuild())
             {
                 Debug.LogWarning($"Scene '{Scene.Path}' does not exist in the build settings.");
-                return;
+                return false;
             }
             if (!Scene.LoadedScene.IsValid() || !Scene.LoadedScene.isLoaded) // is not loaded
             {
-                return;
+                return false;
             }
 
             await SceneManager.UnloadSceneAsync(Scene.LoadedScene);
+            return true;
         }
 
         private static async UniTask EnsureLoadedAsync(SceneReference sceneRef)

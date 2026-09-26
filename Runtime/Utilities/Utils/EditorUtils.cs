@@ -161,13 +161,7 @@ namespace GameDevKit.Editor
             }
 
             var components = assets.OfType<GameObject>()
-                .Select(go =>
-                {
-                    if (go.TryGetComponent<T>(out var component)) { return component; }
-
-                    Debug.LogWarning($"GameObject {go.name} does not have a component of type {typeof(T).Name}. Skipping.", go);
-                    return null;
-                })
+                .Select(go => go.TryGetComponent<T>(out var component) ? component : null)
                 .Where(c => c != null)
                 .ToArray();
 

@@ -61,13 +61,15 @@ namespace GameDevKit.SceneManagement
             return new SceneActivationHandle(sceneName, sceneOp);
         }
 
-        public static async UniTask UnloadScene(string sceneName)
+        public static UniTask UnloadScene(string sceneName) => UnloadScene(SceneManager.GetSceneByName(sceneName));
+        public static async UniTask UnloadScene(Scene scene)
         {
-            var scene = SceneManager.GetSceneByName(sceneName);
-            if (scene.IsValid() && scene.isLoaded)
+            if (!scene.IsValid() || !scene.isLoaded)
             {
-                await SceneManager.UnloadSceneAsync(scene);
+                Debug.LogWarning($"Scene '{scene.name}' is not valid or not loaded.");
+                return;
             }
+            await SceneManager.UnloadSceneAsync(scene);
         }
     }
 }
