@@ -4,6 +4,7 @@
     "references": [
         "Unity.Cinemachine",
         "Unity.TextMeshPro",
+        "Unity.InputSystem",
         "UniTask",
         "PrimeTween.Runtime",
         "EditorAttributes",
