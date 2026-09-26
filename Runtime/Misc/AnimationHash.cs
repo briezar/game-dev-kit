@@ -5,41 +5,35 @@ using UnityEngine;
 
 namespace GameDevKit
 {
-    /// <summary> Animator.StringToHash wrapper for better context </summary>
+    [Serializable]
     public struct AnimationHash
     {
-        public int value;
-
-        public AnimationHash(string paramName) => value = Animator.StringToHash(paramName);
-
-        public static implicit operator int(AnimationHash hash) => hash.value;
-
-        public static implicit operator AnimationHash(int intValue) => new() { value = intValue };
-        public static implicit operator AnimationHash(string paramName) => new(paramName);
-    }
-
-    [Serializable]
-    public struct SerializableAnimationHash
-    {
+#if UNITY_EDITOR
         [SerializeField] private string _paramName;
+#endif
 
-        private int? _value;
-        public int Value => _value ??= Animator.StringToHash(_paramName);
+        [SerializeField] private int _value;
+
+        public readonly int Value => _value;
 
 #if UNITY_EDITOR
         internal static class EditorProps
         {
             public static string ParamName => nameof(_paramName);
+            public static string Value => nameof(_value);
         }
 #endif
 
-        public SerializableAnimationHash(string paramName)
+        public AnimationHash(string paramName)
         {
+#if UNITY_EDITOR
             _paramName = paramName;
+#endif
             _value = Animator.StringToHash(paramName);
         }
 
-        public static implicit operator int(SerializableAnimationHash hash) => hash.Value;
-        public static implicit operator SerializableAnimationHash(string paramName) => new(paramName);
+        public static implicit operator int(AnimationHash hash) => hash.Value;
+        public static implicit operator AnimationHash(string paramName) => new(paramName);
+        public static implicit operator AnimationHash(int intValue) => new() { _value = intValue };
     }
 }
