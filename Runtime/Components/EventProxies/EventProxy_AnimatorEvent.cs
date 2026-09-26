@@ -12,14 +12,24 @@ namespace GameDevKit.EventProxies
     /// Attach this component to a GameObject with an Animator, then in the Animation tab, add an Animation Event and set the function to <see cref="RaiseEvent"/> and pass in the desired key.
     /// This will invoke the UnityEvent associated with that key in this component.
     /// </summary>
-    [RequireComponent(typeof(Animator))]
-    public class EventProxy_AnimatorEvent : MonoBehaviour
+    public class EventProxy_AnimatorEvent : EventProxy_AnimatorEvent<string>
     {
-        [SerializeField] private SerializedDictionary<string, UnityEvent> _events;
 
-        public UnityEvent<string> onEventRaised;
+    }
 
-        public void RaiseEvent(string key)
+    /// <summary>
+    /// This component allows you to raise UnityEvents from an Animator component using a ScriptableObject of type <typeparamref name="T"/> key.
+    /// Attach this component to a GameObject with an Animator, then in the Animation tab, add an Animation Event and set the function to <see cref="RaiseEvent"/> and pass in the desired key.
+    /// This will invoke the UnityEvent associated with that key in this component.
+    /// </summary>
+    [RequireComponent(typeof(Animator))]
+    public abstract class EventProxy_AnimatorEvent<T> : MonoBehaviour
+    {
+        [SerializeField] private SerializedDictionary<T, UnityEvent> _events;
+
+        public UnityEvent<T> onEventRaised;
+
+        public void RaiseEvent(T key)
         {
             if (_events.TryGetValue(key, out var unityEvent))
             {
