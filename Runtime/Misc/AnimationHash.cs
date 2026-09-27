@@ -34,6 +34,5 @@ namespace GameDevKit
 
         public static implicit operator int(AnimationHash hash) => hash.Value;
         public static implicit operator AnimationHash(string paramName) => new(paramName);
-        public static implicit operator AnimationHash(int intValue) => new() { _value = intValue };
     }
 }
