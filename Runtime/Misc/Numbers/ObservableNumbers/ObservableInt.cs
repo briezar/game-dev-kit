@@ -10,18 +10,16 @@ namespace GameDevKit
     {
         public readonly SourcedAction<IntChangeInfo> OnValueChanged = new();
 
-        public override int Value
+        public override void Set(int value)
         {
-            get => _value;
-            set
-            {
-                var prev = _value;
-                if (value == prev) { return; }
+            var prev = _value;
+            if (value == prev) { return; }
 
-                _value = value;
-                OnValueChanged?.Invoke(new(prev, value));
-            }
+            _value = value;
+            OnValueChanged?.Invoke(new(prev, value));
         }
+
+        public override void Add(int amount) => Set(Value + amount);
 
         public static explicit operator ObservableInt(int value) => new() { _value = value };
         public static implicit operator int(ObservableInt value) => value.Value;

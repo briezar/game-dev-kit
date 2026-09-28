@@ -9,8 +9,19 @@ namespace GameDevKit
     {
         [SerializeField] protected T _value;
 
-        public abstract T Value { get; set; }
+        public T Value => _value;
 
-        public virtual void SetValueWithoutNotify(T value) => _value = value;
+#if UNITY_EDITOR
+        internal static class EditorProps
+        {
+            public static string ValueProp => nameof(_value);
+        }
+#endif
+
+        public abstract void Set(T value);
+        public virtual void SetWithoutNotify(T value) => _value = value;
+
+        public abstract void Add(T amount);
+
     }
 }

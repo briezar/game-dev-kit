@@ -10,18 +10,16 @@ namespace GameDevKit
     {
         public readonly SourcedAction<FloatChangeInfo> OnValueChanged = new();
 
-        public override float Value
+        public override void Set(float value)
         {
-            get => _value;
-            set
-            {
-                var prev = _value;
-                if (Mathf.Approximately(value, prev)) { return; }
+            var prev = _value;
+            if (Mathf.Approximately(value, prev)) { return; }
 
-                _value = value;
-                OnValueChanged?.Invoke(new(prev, value));
-            }
+            _value = value;
+            OnValueChanged?.Invoke(new(prev, value));
         }
+
+        public override void Add(float amount) => Set(Value + amount);
 
         public static explicit operator ObservableFloat(float value) => new() { _value = value };
         public static implicit operator float(ObservableFloat value) => value.Value;

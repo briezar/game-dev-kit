@@ -11,17 +11,21 @@ namespace GameDevKit
 
     public abstract class SourcedDelegate<TDelegate> : ISourcedDelegate where TDelegate : Delegate
     {
-        protected readonly Dictionary<object, TDelegate> _delegates = new();
+        private readonly Dictionary<object, TDelegate> _delegates = new();
 
         public TDelegate this[object source]
         {
-            get
+            get => _delegates.GetValueOrDefault(source);
+            set
             {
-                _delegates.TryAdd(source, default);
-                return _delegates[source];
-            }
+                if (value == null)
+                {
+                    _delegates.Remove(source);
+                    return;
+                }
 
-            set => _delegates[source] = value;
+                _delegates[source] = value;
+            }
         }
 
         public bool UnsubscribeSource(object source) => _delegates.Remove(source);

@@ -206,22 +206,35 @@ public static class UnityObjectExtensions
     public static RectTransform GetRectTransform(this Component component) => (RectTransform)component.transform;
     public static RectTransform GetRectTransform(this GameObject gameObject) => (RectTransform)gameObject.transform;
 
-    public static void DestroyAllChildren(this Transform parent, Func<Transform, bool> condition = null)
+    public static int DestroyAllChildren(this Transform parent, Func<Transform, bool> condition = null)
     {
+        var destroyCount = 0;
         for (int i = parent.childCount - 1; i >= 0; i--)
         {
             var child = parent.GetChild(i);
-            if (condition == null || condition(child)) { child.DestroyGameObject(); }
+            if (condition == null || condition(child))
+            {
+                child.DestroyGameObject();
+                destroyCount++;
+            }
         }
+
+        return destroyCount;
     }
 
-    public static void DestroyAllChildrenImmediate(this Transform parent, Func<Transform, bool> condition = null)
+    public static int DestroyAllChildrenImmediate(this Transform parent, Func<Transform, bool> condition = null)
     {
+        var destroyCount = 0;
         for (int i = parent.childCount - 1; i >= 0; i--)
         {
             var child = parent.GetChild(i);
-            if (condition == null || condition(child)) { child.DestroyGameObjectImmediate(); }
+            if (condition == null || condition(child))
+            {
+                child.DestroyGameObjectImmediate();
+                destroyCount++;
+            }
         }
+        return destroyCount;
     }
 
     public static IEnumerable<Transform> EnumerateChildren(this Transform parent, Func<Transform, bool> condition = null)
