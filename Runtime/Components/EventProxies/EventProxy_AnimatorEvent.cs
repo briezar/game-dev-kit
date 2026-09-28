@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using AYellowpaper.SerializedCollections;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -25,15 +24,23 @@ namespace GameDevKit.EventProxies
     [RequireComponent(typeof(Animator))]
     public abstract class EventProxy_AnimatorEvent<T> : MonoBehaviour
     {
-        [SerializeField] private SerializedDictionary<T, UnityEvent> _events;
+        [Serializable]
+        private class EventEntry
+        {
+            public T key;
+            public UnityEvent<T> unityEvent;
+        }
+
+        [SerializeField] private List<EventEntry> _events;
 
         public UnityEvent<T> onEventRaised;
 
         public void RaiseEvent(T key)
         {
-            if (_events.TryGetValue(key, out var unityEvent))
+            var entry = _events.Find(e => EqualityComparer<T>.Default.Equals(e.key, key));
+            if (entry.unityEvent != null)
             {
-                unityEvent?.Invoke();
+                entry.unityEvent?.Invoke(key);
             }
             onEventRaised?.Invoke(key);
         }
