@@ -14,7 +14,7 @@ namespace GameDevKit.ObjectReferences
     public class FolderReference : ISerializationCallbackReceiver
     {
 #if UNITY_EDITOR
-        [SerializeField] protected UnityEngine.Object _folderAsset;
+        [SerializeField] protected DefaultAsset _folderAsset;
 
         protected virtual bool IsAssetValid => IsFolder;
         protected bool IsFolder => _folderAsset != null && AssetDatabase.IsValidFolder(GetAssetPath());
@@ -50,9 +50,9 @@ namespace GameDevKit.ObjectReferences
         }
 
 #if UNITY_EDITOR
-        protected UnityEngine.Object GetFolderAsset()
+        protected DefaultAsset GetFolderAsset()
         {
-            return string.IsNullOrEmpty(_folderPath) ? null : AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(_folderPath);
+            return string.IsNullOrEmpty(_folderPath) ? null : AssetDatabase.LoadAssetAtPath<DefaultAsset>(_folderPath);
         }
 
         protected string GetAssetPath()

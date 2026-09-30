@@ -2,10 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Diagnostics;
-using Debug = UnityEngine.Debug;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -27,7 +26,14 @@ namespace GameDevKit
         public readonly string AbsolutePath;
         public readonly string AssetName;
 
-        public ScriptableObjectResourcesPathAttribute(string relativePath)
+        /// <summary>
+        /// True if this attribute was generated from the type name because the type has none defined.
+        /// </summary>
+        public readonly bool UseDefaultPath;
+
+        public ScriptableObjectResourcesPathAttribute(string relativePath) : this(relativePath, false) { }
+
+        private ScriptableObjectResourcesPathAttribute(string relativePath, bool useDefaultPath)
         {
             if (!relativePath.Contains("/Resources/", StringComparison.Ordinal))
             {
@@ -37,11 +43,87 @@ namespace GameDevKit
             var prefix = relativePath.StartsWith("Assets/", StringComparison.Ordinal) ? string.Empty : "Assets/";
             var suffix = relativePath.EndsWith(".asset", StringComparison.Ordinal) ? string.Empty : ".asset";
             RelativePath = $"{prefix}{relativePath}{suffix}";
-            LoadPath = RelativePath.Split("/Resources/")[^1].Replace(".asset", string.Empty);
+            LoadPath = RelativePath.Split("/Resources/")[^1].RemoveFromEnd(".asset");
             AbsolutePath = Directory.GetParent(Application.dataPath).FullName + "/" + RelativePath;
 
             AssetName = Path.GetFileNameWithoutExtension(RelativePath);
+            UseDefaultPath = useDefaultPath;
         }
+
+        /// <summary>
+        /// Returns the attribute defined on the type, or one using "Assets/Resources/{Type.FullName without SO suffix}.asset" if the type has none.
+        /// </summary>
+        public static ScriptableObjectResourcesPathAttribute Resolve(Type type)
+        {
+            var attribute = type.GetCustomAttribute<ScriptableObjectResourcesPathAttribute>();
+            return attribute ?? new ScriptableObjectResourcesPathAttribute(GetDefaultPath(type), true);
+        }
+
+        private static string GetDefaultPath(Type type) => $"Assets/Resources/{type.FullName.RemoveFromEnd("SO")}.asset";
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Logs a warning if this attribute was generated from the type name, recommending to define it explicitly.
+        /// </summary>
+        public void WarnIfDefault(Type type)
+        {
+            if (!UseDefaultPath) { return; }
+
+            Debug.LogWarning($"Class {type.Name} has no {nameof(ScriptableObjectResourcesPathAttribute)}. Using default path '{RelativePath}'. It is recommended to define the attribute explicitly.");
+        }
+
+        /// <summary>
+        /// Creates the directory of the defined path if missing. Returns true if it had to be created.
+        /// </summary>
+        public bool EnsureDirectory()
+        {
+            var directory = Directory.GetParent(AbsolutePath).FullName;
+            if (Directory.Exists(directory)) { return false; }
+
+            Directory.CreateDirectory(directory);
+            AssetDatabase.Refresh();
+            return true;
+        }
+
+        /// <summary>
+        /// Moves the asset and its .meta file to the defined path, creating the matching directories, then refreshes the AssetDatabase.
+        /// </summary>
+        public bool MoveAssetPathToAttributePath(string currentAssetPath)
+        {
+            if (currentAssetPath == RelativePath) { return true; }
+
+            if (File.Exists(AbsolutePath))
+            {
+                Debug.LogError($"Cannot move '{currentAssetPath}' to '{RelativePath}': a file already exists there.");
+                return false;
+            }
+
+            try
+            {
+                var currentAbsolutePath = Directory.GetParent(Application.dataPath).FullName + "/" + currentAssetPath;
+                EnsureDirectory();
+                File.Move(currentAbsolutePath, AbsolutePath);
+
+                var currentMetaPath = $"{currentAbsolutePath}.meta";
+                if (File.Exists(currentMetaPath))
+                {
+                    File.Move(currentMetaPath, $"{AbsolutePath}.meta");
+                }
+
+                Debug.LogWarning($"Moved '{currentAssetPath}' to '{RelativePath}'.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+                return false;
+            }
+            finally
+            {
+                AssetDatabase.Refresh();
+            }
+        }
+#endif
 
         public class InvalidPathException : Exception
         {
@@ -50,11 +132,13 @@ namespace GameDevKit
     }
 
     /// <summary>
-    /// Base class for ScriptableObject singletons loaded from Resources folder.  Must have <see cref="ScriptableObjectResourcesPathAttribute"/> defined.
+    /// Base class for ScriptableObject singletons loaded from Resources folder.  Should have <see cref="ScriptableObjectResourcesPathAttribute"/> defined, otherwise "Assets/Resources/{Type.FullName without SO suffix}.asset" is used.<br/>
+    /// In the editor, newly created assets of a singleton type are deleted if an instance already exists, otherwise they are moved to the defined path.
     /// </summary>
-    public abstract class SingletonScriptableObject<T> : ScriptableObject where T : ScriptableObject
+    public abstract class SingletonScriptableObject<T> : ScriptableObject where T : SingletonScriptableObject<T>
     {
         private static T _instance;
+
         protected static T instance
         {
             get
@@ -69,28 +153,16 @@ namespace GameDevKit
                         var infos = EditorUtils.FindAssets<T>();
                         if (infos.Length == 0)
                         {
+                            pathAttribute.EnsureDirectory();
                             _instance = CreateInstance<T>();
                             AssetDatabase.CreateAsset(_instance, pathAttribute.RelativePath);
                             Debug.Log($"Created new {typeof(T).Name} at {pathAttribute.RelativePath}", _instance);
+                            pathAttribute.WarnIfDefault(typeof(T));
                         }
-                        else if (infos.Length >= 1)
+                        else
                         {
                             _instance = infos[0];
-                            try
-                            {
-                                Directory.CreateDirectory(Directory.GetParent(pathAttribute.AbsolutePath).FullName);
-                                var oldPath = Directory.GetParent(Application.dataPath).FullName + "/" + AssetDatabase.GetAssetPath(_instance);
-                                File.Move(oldPath, pathAttribute.AbsolutePath);
-                                File.Move($"{oldPath}.meta", $"{pathAttribute.AbsolutePath}.meta");
-
-                                Debug.LogWarning($"Moved {_instance} to {pathAttribute.RelativePath}", _instance);
-
-                                AssetDatabase.Refresh();
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.LogError(ex);
-                            }
+                            pathAttribute.MoveAssetPathToAttributePath(AssetDatabase.GetAssetPath(_instance));
 
                             if (infos.Length > 1)
                             {
@@ -131,25 +203,110 @@ namespace GameDevKit
 #endif
         }
 
-        protected static ScriptableObjectResourcesPathAttribute GetPathAttribute()
+        protected static ScriptableObjectResourcesPathAttribute GetPathAttribute() => ScriptableObjectResourcesPathAttribute.Resolve(typeof(T));
+    }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Detects newly created assets and, for <see cref="SingletonScriptableObject{T}"/> types, deletes them if an instance already exists or moves them to their defined path.<br/>
+    /// Also blocks moving or renaming a singleton asset away from its defined path.
+    /// </summary>
+    internal class SingletonScriptableObjectAssetProcessor : AssetModificationProcessor
+    {
+        private static readonly HashSet<string> _pendingPaths = new();
+
+        private static void OnWillCreateAsset(string path)
         {
-            var type = typeof(T);
-            var pathAttribute = type.GetCustomAttribute<ScriptableObjectResourcesPathAttribute>();
-            if (pathAttribute == null)
+            if (!path.EndsWith(".asset", StringComparison.Ordinal)) { return; }
+
+            if (_pendingPaths.Add(path) && _pendingPaths.Count == 1)
             {
-                Debug.LogError($"Class {type.Name} must have a {nameof(ScriptableObjectResourcesPathAttribute)}.");
-                return null;
+                EditorApplication.delayCall += ProcessPendingPaths;
             }
-            return pathAttribute;
         }
 
-
-        [Conditional("UNITY_EDITOR")]
-        public new static void SetDirty()
+        private static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
         {
-#if UNITY_EDITOR
-            EditorUtility.SetDirty(instance);
-#endif
+            if (!AssetDatabase.IsValidFolder(sourcePath))
+            {
+                return IsMoveAllowed(sourcePath, destinationPath) ? AssetMoveResult.DidNotMove : AssetMoveResult.FailedMove;
+            }
+
+            // A folder move only reports the folder, so check every singleton asset inside it against where it would end up.
+            foreach (var guid in AssetDatabase.FindAssets("t:ScriptableObject", new[] { sourcePath }))
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var newAssetPath = destinationPath + assetPath[sourcePath.Length..];
+                if (!IsMoveAllowed(assetPath, newAssetPath))
+                {
+                    return AssetMoveResult.FailedMove;
+                }
+            }
+            return AssetMoveResult.DidNotMove;
+        }
+
+        private static bool IsMoveAllowed(string sourcePath, string destinationPath)
+        {
+            var type = AssetDatabase.GetMainAssetTypeAtPath(sourcePath);
+            if (!type.Implements(typeof(SingletonScriptableObject<>))) { return true; }
+
+            if (!TryResolvePathAttribute(type, out var pathAttribute)) { return true; }
+
+            // Allow moving a misplaced asset to its defined path.
+            if (destinationPath == pathAttribute.RelativePath) { return true; }
+
+            Debug.LogWarning($"{type.Name} must stay at '{pathAttribute.RelativePath}'. Blocked moving '{sourcePath}' to '{destinationPath}'.");
+            return false;
+        }
+
+        private static void ProcessPendingPaths()
+        {
+            var paths = _pendingPaths.ToArray();
+            _pendingPaths.Clear();
+
+            foreach (var path in paths)
+            {
+                HandleCreatedAsset(path);
+            }
+        }
+
+        private static void HandleCreatedAsset(string assetPath)
+        {
+            var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+            if (!type.Implements(typeof(SingletonScriptableObject<>))) { return; }
+
+            if (!TryResolvePathAttribute(type, out var pathAttribute)) { return; }
+
+            // Already at the defined path, e.g. created by the singleton getter.
+            if (assetPath == pathAttribute.RelativePath) { return; }
+
+            if (AssetDatabase.GetMainAssetTypeAtPath(pathAttribute.RelativePath) == type)
+            {
+                Debug.LogError($"A {type.Name} already exists at '{pathAttribute.RelativePath}'. Deleted the new asset at '{assetPath}'.", AssetDatabase.LoadMainAssetAtPath(pathAttribute.RelativePath));
+                AssetDatabase.DeleteAsset(assetPath);
+                return;
+            }
+
+            if (pathAttribute.MoveAssetPathToAttributePath(assetPath))
+            {
+                pathAttribute.WarnIfDefault(type);
+            }
+        }
+
+        private static bool TryResolvePathAttribute(Type type, out ScriptableObjectResourcesPathAttribute pathAttribute)
+        {
+            try
+            {
+                pathAttribute = ScriptableObjectResourcesPathAttribute.Resolve(type);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+                pathAttribute = null;
+                return false;
+            }
         }
     }
+#endif
 }

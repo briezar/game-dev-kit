@@ -43,15 +43,15 @@ namespace GameDevKit.Editor
 
         public bool TryAddAssetAtPath(string path)
         {
+            var type = AssetDatabase.GetMainAssetTypeAtPath(path);
+            if (!type.Implements<ScriptableObject>()) { return false; }
+            if (!type.HasAttribute<ResetOnExitPlayModeAttribute>()) { return false; }
+
             var guid = AssetDatabase.AssetPathToGUID(path);
             if (Guids.Contains(guid, StringComparer.Ordinal)) { return false; }
 
-            var obj = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-            if (obj == null) { return false; }
-            if (!obj.HasAttribute<ResetOnExitPlayModeAttribute>()) { return false; }
-
             Guids.Add(guid);
-            Debug.Log($"Added resettable {nameof(ScriptableObject)}: {obj}");
+            Debug.Log($"Added resettable {nameof(ScriptableObject)}: {type.Name}");
             return true;
         }
 

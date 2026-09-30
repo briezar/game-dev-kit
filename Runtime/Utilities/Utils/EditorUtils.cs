@@ -89,32 +89,6 @@ namespace GameDevKit.Editor
             }
         }
 
-        [MenuItem("Tools/Editor/TestUniTask")]
-        private static void TestUniTask()
-        {
-            if (!Application.isPlaying) { return; }
-
-            var gameObject = new GameObject("Test");
-            var token = gameObject.GetCancellationTokenOnDisable();
-            Task();
-
-            async UniTask Task()
-            {
-                Debug.Log("Task Start");
-                while (true)
-                {
-                    var cancelled = await UniTask.WaitForSeconds(1, cancellationToken: token).SuppressCancellationThrow();
-                    if (cancelled)
-                    {
-                        Debug.Log("Cancelled");
-                        break;
-                    }
-                    Debug.Log(Time.time);
-                }
-                Debug.Log("Task End");
-            }
-        }
-
         public static void SetPrefabDirty(GameObject prefab)
         {
             var prefabStage = PrefabStageUtility.GetPrefabStage(prefab);

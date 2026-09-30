@@ -168,6 +168,8 @@ public static class StringExtensions
         return input.Remove(index, toRemove.Length);
     }
 
+    public static string RemoveFromEnd(this string input, string toRemove) => input.EndsWith(toRemove, StringComparison.Ordinal) ? input[..^toRemove.Length] : input;
+
     private static readonly Regex _separateCamelCaseRegex = new(@"(?<=[a-z])(?=[A-Z])|(?<=[A-Za-z])(?=\d)|(?<=\d)(?=[A-Za-z])", RegexOptions.Compiled);
 
     /// <summary> "SeparateCamelCase" -> "Separate Camel Case" </summary>
