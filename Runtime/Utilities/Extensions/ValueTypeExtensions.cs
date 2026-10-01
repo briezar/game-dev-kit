@@ -45,6 +45,10 @@ public static class ValueTypeExtensions
     public static bool ApproximatelyEquals(this float a, float b, float tolerance = 0.01f) => Mathf.Abs(a - b) < tolerance;
     public static bool ApproximatelyEquals(this double a, double b, float tolerance = 0.01f) => Math.Abs(a - b) < tolerance;
 
+    public static bool IsApproximately(this float value, float other) => Mathf.Approximately(value, other);
+    public static bool IsApproximatelyOrLessThan(this float value, float threshold) => value < threshold || Mathf.Approximately(value, threshold);
+    public static bool IsApproximatelyOrGreaterThan(this float value, float threshold) => value > threshold || Mathf.Approximately(value, threshold);
+
     public static float Round(this float value, int decimalPlace)
     {
         // 0.1223 , 2 decimal place
