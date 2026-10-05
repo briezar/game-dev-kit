@@ -13,9 +13,17 @@ public static class EnumerableExtensions
     public static T[] EmptyArray<T>(this IEnumerable<T> _) => Array.Empty<T>();
 
     /// <summary> Returns the symmetric difference (unique elements) of two sequences. </summary>
-    public static IEnumerable<T> SymmetricExcept<T>(this IEnumerable<T> first, IEnumerable<T> second)
+    public static IEnumerable<T> SymmetricExcept<T>(this IEnumerable<T> first, IEnumerable<T> second) => first.Except(second).Union(second.Except(first));
+
+    /// <summary>
+    /// Gets a pooled list buffer containing the elements of the enumerable to avoid allocations when iterating IEnumerable.
+    /// Call Dispose on the returned PooledObject to release the buffer back to the pool, or use a using statement to automatically release it.
+    /// </summary>
+    public static PooledObject<List<T>> GetListBuffer<T>(this IEnumerable<T> items, out List<T> buffer)
     {
-        return first.Except(second).Union(second.Except(first));
+        var pooledObject = ListPool<T>.Get(out buffer);
+        buffer.AddRange(items);
+        return pooledObject;
     }
 
     public static bool HasDuplicates<T>(this IEnumerable<T> source)
@@ -25,18 +33,20 @@ public static class EnumerableExtensions
         {
             if (!set.Add(item))
             {
-                return true; // Duplicate found
+                return true;
             }
         }
-        return false; // No duplicates found
+        return false;
     }
 
     public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
     {
-        if (enumerable == null) { return true; }
         return enumerable switch
         {
+            null => true,
             IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection.Count == 0,
+            ICollection<T> collection => collection.Count == 0,
+            ICollection collection => collection.Count == 0,
             _ => !enumerable.Any(),
         };
     }
@@ -49,8 +59,7 @@ public static class EnumerableExtensions
             return default;
         }
 
-        using var _ = ListPool<T>.Get(out var list);
-        list.AddRange(enumerable);
+        using var _ = enumerable.GetListBuffer(out var list);
         return list[Random.Range(0, list.Count)];
     }
 
@@ -73,23 +82,6 @@ public static class EnumerableExtensions
             }
         }
         return -1;
-    }
-
-    public static bool TryGet<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, out T element)
-    {
-        element = default;
-        if (enumerable.IsNullOrEmpty() || predicate == null) { return false; }
-
-        foreach (var item in enumerable)
-        {
-            if (predicate(item))
-            {
-                element = item;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public static IEnumerable<(TSource, int)> WithIndex<TSource>(this IEnumerable<TSource> source) => source.Select((e, i) => (e, i));

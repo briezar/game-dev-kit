@@ -169,6 +169,8 @@ namespace GameDevKit
                                 Debug.LogWarning($"Multiple {typeof(T).Name} found! Using the first one: {_instance.name}", _instance);
                             }
                         }
+#else
+                        throw new InvalidOperationException($"No instance of {typeof(T).Name} found and unable to create one outside of the editor.");
 #endif
                     }
                 }

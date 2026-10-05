@@ -22,7 +22,7 @@ namespace GameDevKit.UI
 
         public T GetInstruction<T>() where T : Instruction, new()
         {
-            if (!Instructions.TryGet(instruction => instruction is T, out var instruction))
+            if (!Instructions.TryFind(static instruction => instruction is T, out var instruction))
             {
                 instruction = new T();
                 Instructions.Add(instruction);

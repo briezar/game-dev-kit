@@ -69,7 +69,25 @@ public static class ListExtensions
         return true;
     }
 
-    public static bool TryGet<T>(this IReadOnlyList<T> list, int index, out T element)
+    public static bool TryFind<T>(this IReadOnlyList<T> list, Func<T, bool> predicate, out T element)
+    {
+        element = default;
+        if (list.IsNullOrEmpty() || predicate == null) { return false; }
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            var item = list[i];
+            if (predicate(item))
+            {
+                element = item;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool TryFind<T>(this IReadOnlyList<T> list, int index, out T element)
     {
         if (list.IsNullOrEmpty() || index < 0 || index >= list.Count)
         {

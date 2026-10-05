@@ -89,12 +89,19 @@ namespace GameDevKit
     [Serializable]
     public struct IntAmountLootTable<T>
     {
-        public IntWeightedAmount<T>[] items;
+        [Serializable]
+        public struct ItemWeight
+        {
+            public IntAmount<T> item;
+            public float weight;
+        }
 
-        public readonly IntAmount<T> GetRandomItem()
+        public ItemWeight[] items;
+        
+        public readonly IntAmount<T> Roll()
         {
             var randomItem = GeneralUtils.GetWeightedRandom(items, (item) => item.weight);
-            return new(randomItem.item, randomItem.amount);
+            return randomItem.item;
         }
     }
 
@@ -104,6 +111,13 @@ namespace GameDevKit
         public T item;
         public int amount;
         public float weight;
+    }
+
+    [Serializable]
+    public struct IntAmountChance<T>
+    {
+        public IntAmount<T> item;
+        public float chance;
     }
 
     public static class IntAmountExtensions

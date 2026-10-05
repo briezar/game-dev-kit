@@ -6,6 +6,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Pool;
 using UnityEngine.UI;
 
 public static class GeneralUtils
@@ -85,14 +86,16 @@ public static class GeneralUtils
     /// <summary> Selects a random item from a collection based on their weights. </summary>
     public static T GetWeightedRandom<T>(IEnumerable<T> items, Func<T, float> weightSelector)
     {
+        using var _ = items.GetListBuffer(out var itemBuffer);
+
         var totalWeight = 0f;
-        foreach (var item in items)
+        foreach (var item in itemBuffer)
         {
             totalWeight += weightSelector(item);
         }
 
         var randomValue = UnityEngine.Random.Range(0, totalWeight);
-        foreach (var item in items)
+        foreach (var item in itemBuffer)
         {
             var weight = weightSelector(item);
             if (randomValue <= weight)
@@ -103,7 +106,7 @@ public static class GeneralUtils
         }
 
         Debug.LogError("Failed to select a weighted random item.");
-        return items.First();
+        return itemBuffer.First();
     }
 
     /// <summary> Get a random index from an array of weights </summary>
