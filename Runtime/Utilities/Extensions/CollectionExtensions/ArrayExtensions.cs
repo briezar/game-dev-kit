@@ -26,6 +26,8 @@ public static class ArrayExtensions
     public static int IndexOf<T>(this T[] array, T value, int startIndex) => Array.IndexOf(array, value, startIndex);
     public static int IndexOf<T>(this T[] array, T value) => Array.IndexOf(array, value);
 
+    public static void Clear<T>(this T[] array, int? index = null, int? length = null) => Array.Clear(array, index ?? 0, length ?? array.Length);
+
     public static ReadOnlyCollection<T> AsReadOnly<T>(this T[] array) => Array.AsReadOnly(array);
 
     public static IEnumerable<(T element, Vector2Int coord)> Enumerate<T>(this T[,] array2D)
