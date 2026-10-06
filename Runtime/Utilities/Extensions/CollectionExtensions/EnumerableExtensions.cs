@@ -13,7 +13,13 @@ public static class EnumerableExtensions
     public static T[] EmptyArray<T>(this IEnumerable<T> _) => Array.Empty<T>();
 
     /// <summary> Returns the symmetric difference (unique elements) of two sequences. </summary>
-    public static IEnumerable<T> SymmetricExcept<T>(this IEnumerable<T> first, IEnumerable<T> second) => first.Except(second).Union(second.Except(first));
+    public static IEnumerable<T> SymmetricExcept<T>(this IEnumerable<T> first, IEnumerable<T> second)
+    {
+        // allocates way less than `first.Except(second).Union(second.Except(first))` and does not scale with collection size
+        var diffSet = new HashSet<T>(first);
+        diffSet.SymmetricExceptWith(second);
+        return diffSet;
+    }
 
     /// <summary>
     /// Gets a pooled list buffer containing the elements of the enumerable to avoid allocations when iterating IEnumerable.

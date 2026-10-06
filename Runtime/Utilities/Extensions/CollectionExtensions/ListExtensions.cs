@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Pool;
 using Random = UnityEngine.Random;
 
 public static class ListExtensions
@@ -117,10 +115,6 @@ public static class ListExtensions
     {
         list.Sort((a, b) => keySelector(b).CompareTo(keySelector(a)));
     }
-    public static void SortDescending<T>(this List<T> list)
-    {
-        list.Sort();
-        list.Reverse();
-    }
+    public static void SortDescending<T>(this List<T> list) where T : IComparable<T> => list.Sort(static (a, b) => b.CompareTo(a));
 
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class ArrayExtensions
 {
-    public static bool Contains<T>(this T[] array, T element) => Array.Exists(array, (match) => match.Equals(element));
+    public static bool Contains<T>(this T[] array, T element) => Array.IndexOf(array, element) >= 0;
     public static bool TrueForAll<T>(this T[] array, Predicate<T> match) => Array.TrueForAll(array, match);
     public static bool Exists<T>(this T[] array, Predicate<T> match) => Array.Exists(array, match);
     public static T Find<T>(this T[] array, Predicate<T> match) => Array.Find(array, match);

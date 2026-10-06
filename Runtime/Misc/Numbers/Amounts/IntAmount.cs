@@ -117,7 +117,7 @@ namespace GameDevKit
     public struct IntAmountChance<T>
     {
         public IntAmount<T> item;
-        public float chance;
+        [Range(0f, 1f)] public float chance;
     }
 
     public static class IntAmountExtensions
