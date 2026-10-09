@@ -67,6 +67,23 @@ public static class ListExtensions
         return true;
     }
 
+    public static bool TryFindIndex<T>(this IReadOnlyList<T> list, Func<T, bool> predicate, out int index)
+    {
+        index = -1;
+        if (list.IsNullOrEmpty() || predicate == null) { return false; }
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (predicate(list[i]))
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static bool TryFind<T>(this IReadOnlyList<T> list, Func<T, bool> predicate, out T element)
     {
         element = default;
@@ -107,14 +124,19 @@ public static class ListExtensions
         }
     }
 
+    /// <summary> Sorts the list from lowest to highest based on the specified key selector. </summary>
     public static void SortAscending<TSource, TKey>(this List<TSource> list, Func<TSource, TKey> keySelector) where TKey : IComparable<TKey>
     {
         list.Sort((a, b) => keySelector(a).CompareTo(keySelector(b)));
     }
+
+    /// <summary> Sorts the list from highest to lowest based on the specified key selector. </summary>
     public static void SortDescending<TSource, TKey>(this List<TSource> list, Func<TSource, TKey> keySelector) where TKey : IComparable<TKey>
     {
         list.Sort((a, b) => keySelector(b).CompareTo(keySelector(a)));
     }
+
+    /// <summary> Sorts the list from highest to lowest. </summary>
     public static void SortDescending<T>(this List<T> list) where T : IComparable<T> => list.Sort(static (a, b) => b.CompareTo(a));
 
 }

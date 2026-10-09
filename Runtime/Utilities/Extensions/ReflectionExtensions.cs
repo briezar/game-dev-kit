@@ -14,22 +14,18 @@ public static class ReflectionExtensions
         {
             foreach (var interfaceType in source.GetInterfaces())
             {
-                if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == other)
-                {
-                    return true;
-                }
+                if (MatchesGeneric(interfaceType, other)) { return true; }
             }
             return false;
         }
 
         for (var current = source; current != null; current = current.BaseType)
         {
-            if (current.IsGenericType && current.GetGenericTypeDefinition() == other)
-            {
-                return true;
-            }
+            if (MatchesGeneric(current, other)) { return true; }
         }
         return false;
+
+        static bool MatchesGeneric(Type type, Type genericType) => type.IsGenericType && type.GetGenericTypeDefinition() == genericType;
     }
 
     public static bool HasAttribute<TAttribute>(this object source, bool inherit = true) where TAttribute : Attribute => HasAttribute<TAttribute>(source.GetType(), inherit);

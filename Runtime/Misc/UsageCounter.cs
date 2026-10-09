@@ -3,7 +3,7 @@ using UnityEngine;
 namespace GameDevKit
 {
     /// <summary>
-    /// Tracks whether a resource is in use using a simple reference-like counter.
+    /// Tracks whether a resource is in use by using a simple ref-counter.
     /// </summary>
     public class UsageCounter
     {

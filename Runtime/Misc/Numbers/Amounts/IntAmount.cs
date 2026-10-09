@@ -80,6 +80,7 @@ namespace GameDevKit
 
         public override readonly int GetHashCode() => HashCode.Combine(item, amount);
 
+        public static implicit operator IntAmount<T>((T item, int amount) tuple) => new(tuple.item, tuple.amount);
     }
 
     /// <summary>
@@ -92,32 +93,26 @@ namespace GameDevKit
         [Serializable]
         public struct ItemWeight
         {
-            public IntAmount<T> item;
-            public float weight;
+            public T Item;
+            public int Amount;
+            public float Weight;
         }
 
-        public ItemWeight[] items;
-        
+        public ItemWeight[] Items;
+
         public readonly IntAmount<T> Roll()
         {
-            var randomItem = GeneralUtils.GetWeightedRandom(items, (item) => item.weight);
-            return randomItem.item;
+            var randomItem = GeneralUtils.GetWeightedRandom(Items, static (item) => item.Weight);
+            return new(randomItem.Item, randomItem.Amount);
         }
-    }
-
-    [Serializable]
-    public struct IntWeightedAmount<T>
-    {
-        public T item;
-        public int amount;
-        public float weight;
     }
 
     [Serializable]
     public struct IntAmountChance<T>
     {
-        public IntAmount<T> item;
-        [Range(0f, 1f)] public float chance;
+        public T Item;
+        public int Amount;
+        [Range(0f, 1f)] public float Chance;
     }
 
     public static class IntAmountExtensions

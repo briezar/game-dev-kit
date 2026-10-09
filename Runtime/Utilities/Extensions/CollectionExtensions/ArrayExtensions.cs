@@ -28,6 +28,10 @@ public static class ArrayExtensions
 
     public static void Clear<T>(this T[] array, int? index = null, int? length = null) => Array.Clear(array, index ?? 0, length ?? array.Length);
 
+    public static void Sort<T>(this T[] array) => Array.Sort(array);
+    public static void Sort<T>(this T[] array, IComparer<T> comparer) => Array.Sort(array, comparer);
+    public static void Sort<T>(this T[] array, Comparison<T> comparison) => Array.Sort(array, comparison);
+
     public static ReadOnlyCollection<T> AsReadOnly<T>(this T[] array) => Array.AsReadOnly(array);
 
     public static IEnumerable<(T element, Vector2Int coord)> Enumerate<T>(this T[,] array2D)
