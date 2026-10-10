@@ -67,6 +67,7 @@ public static class ListExtensions
         return true;
     }
 
+    public static int FindIndex<T>(this IReadOnlyList<T> list, Func<T, bool> predicate) => list.TryFindIndex(predicate, out var index) ? index : -1;
     public static bool TryFindIndex<T>(this IReadOnlyList<T> list, Func<T, bool> predicate, out int index)
     {
         index = -1;

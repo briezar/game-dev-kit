@@ -32,6 +32,22 @@ public static class ArrayExtensions
     public static void Sort<T>(this T[] array, IComparer<T> comparer) => Array.Sort(array, comparer);
     public static void Sort<T>(this T[] array, Comparison<T> comparison) => Array.Sort(array, comparison);
 
+
+    /// <summary> Sorts the list from lowest to highest based on the specified key selector. </summary>
+    public static void SortAscending<TSource, TKey>(this TSource[] array, Func<TSource, TKey> keySelector) where TKey : IComparable<TKey>
+    {
+        array.Sort((a, b) => keySelector(a).CompareTo(keySelector(b)));
+    }
+
+    /// <summary> Sorts the list from highest to lowest based on the specified key selector. </summary>
+    public static void SortDescending<TSource, TKey>(this TSource[] array, Func<TSource, TKey> keySelector) where TKey : IComparable<TKey>
+    {
+        array.Sort((a, b) => keySelector(b).CompareTo(keySelector(a)));
+    }
+
+    /// <summary> Sorts the list from highest to lowest. </summary>
+    public static void SortDescending<T>(this T[] array) where T : IComparable<T> => array.Sort(static (a, b) => b.CompareTo(a));
+
     public static ReadOnlyCollection<T> AsReadOnly<T>(this T[] array) => Array.AsReadOnly(array);
 
     public static IEnumerable<(T element, Vector2Int coord)> Enumerate<T>(this T[,] array2D)

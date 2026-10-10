@@ -20,16 +20,97 @@ public static class EnumerableExtensions
         diffSet.SymmetricExceptWith(second);
         return diffSet;
     }
-
     /// <summary>
-    /// Gets a pooled list buffer containing the elements of the enumerable to avoid allocations when iterating IEnumerable.
-    /// Call Dispose on the returned PooledObject to release the buffer back to the pool, or use a using statement to automatically release it.
+    /// Returns a pooled list holding a copy of the elements to avoid allocations when iterating IEnumerable.
+    /// <br/>Dispose the returned handle to release the list.
     /// </summary>
     public static PooledObject<List<T>> GetListBuffer<T>(this IEnumerable<T> items, out List<T> buffer)
     {
         var pooledObject = ListPool<T>.Get(out buffer);
         buffer.AddRange(items);
         return pooledObject;
+    }
+
+    /// <inheritdoc cref="AsCollectionOrPooledCopy"/>
+    public static SourceOrPooledCopy<List<T>, T> AsListOrPooledCopy<T>(this IEnumerable<T> items, out List<T> buffer) => new(items, out buffer);
+
+    /// <inheritdoc cref="AsCollectionOrPooledCopy"/>
+    public static SourceOrPooledCopy<Dictionary<TKey, TValue>, KeyValuePair<TKey, TValue>> AsDictionaryOrPooledCopy<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> items, out Dictionary<TKey, TValue> buffer) => new(items, out buffer);
+
+    /// <inheritdoc cref="AsCollectionOrPooledCopy"/>
+    public static SourceOrPooledCopy<HashSet<T>, T> AsHashSetOrPooledCopy<T>(this IEnumerable<T> items, out HashSet<T> buffer) => new(items, out buffer);
+
+    /// <summary> Returns a <see cref="SourceOrPooledCopy{TCollection, TItem}"/> representing a collection that is either the source itself, or a pooled copy. </summary>
+    public static SourceOrPooledCopy<TCollection, TItem> AsCollectionOrPooledCopy<TCollection, TItem>(this IEnumerable<TItem> enumerable, out TCollection buffer) where TCollection : class, ICollection<TItem>, new() => new(enumerable, out buffer);
+
+    /// <summary>
+    /// Holds a collection that is the source itself when it matches the target type, or a pooled copy otherwise.
+    /// <br/>Disposing releases the pooled copy if it is used.
+    /// <br/>A null source yields an empty pooled collection.
+    /// <br/>E.g. source <c>List&lt;int&gt;</c> with target <c>HashSet&lt;int&gt;</c> holds a pooled <c>HashSet&lt;int&gt;</c>; source <c>HashSet&lt;int&gt;</c> is held as is.
+    /// </summary>
+    public readonly struct SourceOrPooledCopy<TCollection, TItem> : IDisposable where TCollection : class, ICollection<TItem>, new()
+    {
+        private readonly TCollection _buffer;
+        private readonly bool _isFromPool;
+
+        public SourceOrPooledCopy(IEnumerable<TItem> enumerable, out TCollection buffer)
+        {
+            if (enumerable is TCollection existing)
+            {
+                _buffer = buffer = existing;
+                _isFromPool = false;
+                return;
+            }
+
+            CollectionPool<TCollection, TItem>.Get(out var collection);
+            try
+            {
+                Fill(collection, enumerable);
+            }
+            catch
+            {
+                CollectionPool<TCollection, TItem>.Release(collection);
+                throw;
+            }
+
+            _buffer = buffer = collection;
+            _isFromPool = true;
+        }
+
+        private static void Fill(TCollection collection, IEnumerable<TItem> enumerable)
+        {
+            if (enumerable == null) { return; }
+
+            if (collection is List<TItem> targetList)
+            {
+                targetList.AddRange(enumerable);
+                return;
+            }
+
+            if (enumerable is ICollection<TItem>)
+            {
+                using var _ = enumerable.GetListBuffer(out var listBuffer);
+                foreach (var item in listBuffer)
+                {
+                    collection.Add(item);
+                }
+                return;
+            }
+
+            foreach (var item in enumerable)
+            {
+                collection.Add(item);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_isFromPool)
+            {
+                CollectionPool<TCollection, TItem>.Release(_buffer);
+            }
+        }
     }
 
     public static bool HasDuplicates<T>(this IEnumerable<T> source)
