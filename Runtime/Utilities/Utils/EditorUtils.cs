@@ -105,6 +105,16 @@ namespace GameDevKit.Editor
             var guids = AssetDatabase.FindAssets($"{filter} a:assets", searchInFolders?.Where(s => !s.IsNullOrEmpty()).ToArray());
             return guids;
         }
+
+        public static string[] FindAssetPaths<T>(string filter, params string[] searchInFolders) => FindAssetPaths(filter + $" t:{typeof(T).Name}", searchInFolders);
+        public static string[] FindAssetPaths(Type assetType, string filter, params string[] searchInFolders) => FindAssetPaths(filter + $" t:{assetType.Name}", searchInFolders);
+        public static string[] FindAssetPaths(string filter, params string[] searchInFolders)
+        {
+            var guids = FindAssetGuids(filter, searchInFolders);
+            var paths = guids.Select(guid => AssetDatabase.GUIDToAssetPath(guid)).ToArray();
+            return paths;
+        }
+
         public static Object[] FindAssets(string filter, params string[] searchInFolders)
         {
             var guids = FindAssetGuids(filter, searchInFolders);

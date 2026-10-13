@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -27,10 +28,7 @@ namespace GameDevKit.ObjectReferences
 
         public string FolderPath => _folderPath;
 
-        public static implicit operator string(FolderReference folderRef)
-        {
-            return folderRef.FolderPath;
-        }
+        public static implicit operator string(FolderReference folderRef) => folderRef.FolderPath;
 
         // Called to prepare this data for serialization. Stubbed out when not in editor.
         public void OnBeforeSerialize()
@@ -106,9 +104,11 @@ namespace GameDevKit.ObjectReferences
         }
 #endif
 
-        public override string ToString()
-        {
-            return _folderPath;
-        }
+        public override string ToString() => _folderPath;
+    }
+
+    public static class FolderReferenceExtensions
+    {
+        public static string[] ToPaths(this FolderReference[] folderReferences) => folderReferences.Select(f => f.FolderPath).ToArray();
     }
 }
