@@ -108,6 +108,7 @@ namespace SpecializedExtensions
 
 public static class UnityObjectExtensions
 {
+    /// <summary> Returns the object if it is not null, otherwise returns null. Useful for UnityEngine.Object null checks. </summary>
     public static T OrNull<T>(this T obj) where T : Object => obj ? obj : null;
 
     /// <summary>

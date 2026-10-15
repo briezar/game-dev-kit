@@ -5,16 +5,23 @@ using System.Collections.Generic;
 namespace GameDevKit.Collections
 {
     /// <summary>
-    /// A list-like collection that allows for O(1) addition and removal of items using the swap-back pattern.
+    /// A list-like collection of unique items with O(1) addition, removal and lookup.
+    /// <br/>Removal moves the last item into the vacated slot, so order is not preserved.
+    /// <br/>E.g. [A, B, C, D] after Remove(B) becomes [A, D, C].
+    /// <br/>Items must keep the same hash code and equality while in the collection.
+    /// <br/>Adding or removing during a foreach throws <see cref="InvalidOperationException"/>.
+    /// <br/>Safely remove items while iterating by reverse looping by index from Count-1 to 0.
+    /// <br/>Not thread-safe.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
-    public class SwapBackList<T> : IEnumerable<T>
+    public class SwapBackList<T> : IReadOnlyList<T>
     {
         private readonly List<T> _list;
         private readonly Dictionary<T, int> _indexMap;
 
         public int Count => _list.Count;
 
+        /// <summary> Returns the item at the index. Positions change after <see cref="Remove"/>. </summary>
         public T this[int index] => _list[index];
 
         public SwapBackList() : this(32, null) { }
@@ -27,7 +34,7 @@ namespace GameDevKit.Collections
 
         /// <summary>
         /// Adds an item to the end of the collection in O(1) time.
-        /// Returns true if the item was added successfully; false if the item was null or already exists in the collection.
+        /// <br/>Returns true if the item was added; false if the item was null or already exists in the collection.
         /// </summary>
         public bool Add(T item)
         {
@@ -39,8 +46,8 @@ namespace GameDevKit.Collections
         }
 
         /// <summary>
-        /// Removes an item instantly via the swap-back pattern in O(1) time.
-        /// Returns true if the item was removed successfully; false if the item was null or not found in the collection.
+        /// Removes an item in O(1) time by moving the last item into its slot.
+        /// <br/>Returns true if the item was removed; false if the item was null or not found in the collection.
         /// </summary>
         public bool Remove(T item)
         {
@@ -48,7 +55,6 @@ namespace GameDevKit.Collections
 
             var lastIndex = _list.Count - 1;
 
-            // If the item isn't already the last element, swap it
             if (indexToRemove < lastIndex)
             {
                 var lastItem = _list[lastIndex];
@@ -56,7 +62,6 @@ namespace GameDevKit.Collections
                 _indexMap[lastItem] = indexToRemove;
             }
 
-            // Pop the tail element off
             _list.RemoveAt(lastIndex);
             _indexMap.Remove(item);
             return true;
@@ -70,8 +75,8 @@ namespace GameDevKit.Collections
             _indexMap.Clear();
         }
 
-        public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _list.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
     }
-
 }

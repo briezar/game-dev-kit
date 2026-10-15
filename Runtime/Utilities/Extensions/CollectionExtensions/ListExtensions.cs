@@ -124,12 +124,18 @@ public static class ListExtensions
             (list[i], list[randomIndex]) = (list[randomIndex], list[i]);
         }
     }
-
     /// <summary> Sorts the list from lowest to highest based on the specified key selector. </summary>
     public static void SortAscending<TSource, TKey>(this List<TSource> list, Func<TSource, TKey> keySelector) where TKey : IComparable<TKey>
     {
         list.Sort((a, b) => keySelector(a).CompareTo(keySelector(b)));
     }
+
+    /// <summary>
+    /// Sorts the list from lowest to highest based on the specified key selector.
+    /// <br/>Pass a non-capturing <c>static</c> selector and the state for 0 allocation sorting.
+    /// </summary>
+    public static void SortAscending<TState, TSource, TKey>(this List<TSource> list, TState state, Func<TState, TSource, TKey> keySelector) where TKey : IComparable<TKey>
+        => SortWithState(list, state, keySelector, true);
 
     /// <summary> Sorts the list from highest to lowest based on the specified key selector. </summary>
     public static void SortDescending<TSource, TKey>(this List<TSource> list, Func<TSource, TKey> keySelector) where TKey : IComparable<TKey>
@@ -137,7 +143,53 @@ public static class ListExtensions
         list.Sort((a, b) => keySelector(b).CompareTo(keySelector(a)));
     }
 
+    /// <summary>
+    /// Sorts the list from highest to lowest based on the specified key selector.
+    /// <br/>Pass a non-capturing <c>static</c> selector and the state for 0 allocation sorting.
+    /// </summary>
+    public static void SortDescending<TState, TSource, TKey>(this List<TSource> list, TState state, Func<TState, TSource, TKey> keySelector) where TKey : IComparable<TKey>
+        => SortWithState(list, state, keySelector, false);
+
     /// <summary> Sorts the list from highest to lowest. </summary>
     public static void SortDescending<T>(this List<T> list) where T : IComparable<T> => list.Sort(static (a, b) => b.CompareTo(a));
+
+    private static void SortWithState<TState, TSource, TKey>(List<TSource> list, TState state, Func<TState, TSource, TKey> keySelector, bool ascending) where TKey : IComparable<TKey>
+    {
+        using var comparer = StateComparer<TState, TSource, TKey>.Rent(state, keySelector, ascending);
+        list.Sort(comparer);
+    }
+
+    private sealed class StateComparer<TState, TSource, TKey> : IComparer<TSource>, IDisposable where TKey : IComparable<TKey>
+    {
+        [ThreadStatic] private static StateComparer<TState, TSource, TKey> _cached;
+
+        private TState _state;
+        private Func<TState, TSource, TKey> _keySelector;
+        private bool _ascending;
+
+        public static StateComparer<TState, TSource, TKey> Rent(TState state, Func<TState, TSource, TKey> keySelector, bool ascending)
+        {
+            var comparer = _cached ?? new StateComparer<TState, TSource, TKey>();
+            _cached = null;
+            comparer._state = state;
+            comparer._keySelector = keySelector;
+            comparer._ascending = ascending;
+            return comparer;
+        }
+
+        public void Dispose()
+        {
+            _state = default;
+            _keySelector = null;
+            _cached = this;
+        }
+
+        public int Compare(TSource x, TSource y)
+        {
+            return _ascending
+                ? _keySelector(_state, x).CompareTo(_keySelector(_state, y))
+                : _keySelector(_state, y).CompareTo(_keySelector(_state, x));
+        }
+    }
 
 }
