@@ -13,6 +13,7 @@ namespace GameDevKit.Editor.Attributes
     public class SubclassPickerDrawer : PropertyDrawer
     {
         private static readonly Dictionary<Type, List<Type>> _typeCache = new();
+
         private static List<Type> GetDerivedTypes(Type baseType)
         {
             if (!_typeCache.TryGetValue(baseType, out var list))
@@ -30,18 +31,34 @@ namespace GameDevKit.Editor.Attributes
             return list;
         }
 
+        /// <summary>
+        /// Returns the type name prefixed by its declaring types.
+        /// </summary>
+        private static string GetTypeLabel(Type type)
+        {
+            var parts = new List<string>();
+            for (var current = type; current != null; current = current.DeclaringType)
+            {
+                parts.Insert(0, current.Name);
+            }
+            return string.Join(".", parts);
+        }
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => EditorGUI.GetPropertyHeight(property);
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var typeName = property.managedReferenceValue?.GetType().Name ?? "Not set";
+            var currentType = property.managedReferenceValue?.GetType();
+            var buttonContent = currentType == null
+                ? new GUIContent("Not set")
+                : new GUIContent(GetTypeLabel(currentType), currentType.FullName);
 
             var rect = position;
             rect.x += EditorGUIUtility.labelWidth + 2;
             rect.width -= EditorGUIUtility.labelWidth + 2;
             rect.height = EditorGUIUtility.singleLineHeight;
 
-            if (EditorGUI.DropdownButton(rect, new(ObjectNames.NicifyVariableName(typeName)), FocusType.Keyboard))
+            if (EditorGUI.DropdownButton(rect, buttonContent, FocusType.Keyboard))
             {
                 var menu = CreateContextMenu(property);
                 menu.DropDown(rect);
@@ -69,55 +86,71 @@ namespace GameDevKit.Editor.Attributes
 
         private GenericMenu CreateContextMenu(SerializedProperty property)
         {
-            var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("None"), property.managedReferenceValue == null, () =>
-            {
-                property.managedReferenceValue = null;
-                property.serializedObject.ApplyModifiedProperties();
-            });
-
+            // Captured up front; the SerializedProperty is not valid once the menu callbacks run.
+            var targets = property.serializedObject.targetObjects;
+            var propertyPath = property.propertyPath;
             var currentType = property.managedReferenceValue?.GetType();
-            foreach (Type derivedType in GetDerivedTypes(GetBaseType()))
+            var ignoreUnityTypes = attribute is SubclassPickerAttribute { IgnoreUnityTypes: true };
+
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("None"), currentType == null, () => SetManagedReference(targets, propertyPath, null));
+
+            var types = GetDerivedTypes(GetBaseType())
+                        .Where(t => !ignoreUnityTypes || !t.Implements<UnityEngine.Object>())
+                        .ToList();
+
+            var duplicateLabels = types.GroupBy(GetTypeLabel)
+                                       .Where(g => g.Count() > 1)
+                                       .Select(g => g.Key)
+                                       .ToHashSet();
+
+            foreach (var derivedType in types)
             {
-                if (attribute is SubclassPickerAttribute subclassPickerAttribute && subclassPickerAttribute.IgnoreUnityTypes)
+                var itemLabel = GetTypeLabel(derivedType);
+                if (duplicateLabels.Contains(itemLabel))
                 {
-                    if (derivedType.Implements<UnityEngine.Object>()) { continue; }
+                    var typeNamespace = string.IsNullOrEmpty(derivedType.Namespace) ? "global" : derivedType.Namespace;
+                    itemLabel = $"{itemLabel} ({typeNamespace})";
                 }
 
-                menu.AddItem(new(ObjectNames.NicifyVariableName(derivedType.Name)), currentType == derivedType, () =>
-                {
-                    // Supports multi-object editing
-                    foreach (var targetObject in property.serializedObject.targetObjects)
-                    {
-                        var individualObject = new SerializedObject(targetObject);
-                        var individualProperty = individualObject.FindProperty(property.propertyPath);
-                        CreateAndSetManagedReference(individualProperty, derivedType);
-                    }
-
-                });
+                var capturedType = derivedType;
+                menu.AddItem(new GUIContent(itemLabel), currentType == derivedType, () => SetManagedReference(targets, propertyPath, capturedType));
             }
             return menu;
         }
 
-        private void CreateAndSetManagedReference(SerializedProperty property, Type type)
+        /// <summary>
+        /// Assigns a new instance of <paramref name="type"/> to every target, or null when <paramref name="type"/> is null.
+        /// <br/>Each target receives its own instance.
+        /// </summary>
+        private static void SetManagedReference(UnityEngine.Object[] targets, string propertyPath, Type type)
         {
-            object instance;
+            foreach (var target in targets)
+            {
+                var serializedObject = new SerializedObject(target);
+                var property = serializedObject.FindProperty(propertyPath);
+                if (property == null) { continue; }
+
+                property.managedReferenceValue = type == null ? null : CreateInstance(type);
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+
+        private static object CreateInstance(Type type)
+        {
             try
             {
-                instance = Activator.CreateInstance(type, true);
+                return Activator.CreateInstance(type, true);
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"Failed to create instance of {type.Name} with Activator.CreateInstance.\n{ex}");
-                instance = RuntimeHelpers.GetUninitializedObject(type);
+                return RuntimeHelpers.GetUninitializedObject(type);
             }
-            property.managedReferenceValue = instance;
-            property.serializedObject.ApplyModifiedProperties();
         }
 
         public static class ManagedReferenceContextualPropertyMenu
         {
-            private const string kCopiedPropertyPathKey = "SerializeReference.CopiedPropertyPath";
             private const string kClipboardKey = "SerializeReference.CopyAndPasteProperty";
 
             private static readonly GUIContent kPasteReplaceContent = new("Paste (Replace)");
@@ -137,14 +170,17 @@ namespace GameDevKit.Editor.Attributes
             {
                 if (property.propertyType != SerializedPropertyType.ManagedReference) { return; }
 
-                var clonedProperty = property.Copy();
-                menu.AddItem(new GUIContent($"Copy \"{property.propertyPath}\" property"), false, Copy, clonedProperty);
+                var targets = property.serializedObject.targetObjects;
+                var propertyPath = property.propertyPath;
 
-                string copiedPropertyPath = SessionState.GetString(kCopiedPropertyPathKey, string.Empty);
-                if (!string.IsNullOrEmpty(copiedPropertyPath))
+                menu.AddItem(new GUIContent($"Copy \"{propertyPath}\" property"), false, () => Copy(targets[0], propertyPath));
+
+                var clip = ReadClipboard(logWarning: false);
+                if (clip != null)
                 {
-                    menu.AddItem(new GUIContent($"Paste \"{copiedPropertyPath}\" (Replace)"), false, PasteReplace, clonedProperty);
-                    menu.AddItem(new GUIContent($"Paste \"{copiedPropertyPath}\" (Overwrite)"), false, PasteOverwrite, clonedProperty);
+                    var clipLabel = GetTypeLabel(clip.Value.type);
+                    menu.AddItem(new GUIContent($"Paste \"{clipLabel}\" (Replace)"), false, () => PasteReplace(targets, propertyPath));
+                    menu.AddItem(new GUIContent($"Paste \"{clipLabel}\" (Overwrite)"), false, () => PasteOverwrite(targets, propertyPath));
                 }
                 else
                 {
@@ -153,33 +189,31 @@ namespace GameDevKit.Editor.Attributes
                 }
 
                 // ---- Duplicate (Deep Copy) for array/list elements ----
-                if (TryGetArrayElementContext(property.propertyPath, out var parentPath, out var elementIndex))
+                if (TryGetArrayElementContext(propertyPath, out var parentPath, out var elementIndex))
                 {
-                    var target = property.serializedObject.targetObject;
-                    var elementPath = BuildElementPath(parentPath, elementIndex);
-
                     menu.AddSeparator(string.Empty);
                     menu.AddItem(kDuplicateDeepCopyContent, false, () =>
                     {
-                        DuplicateArrayElementDeepCopy(target, parentPath, elementIndex, elementPath);
+                        foreach (var target in targets)
+                        {
+                            DuplicateArrayElementDeepCopy(target, parentPath, elementIndex);
+                        }
                     });
                 }
             }
 
-            private static void Copy(object customData)
+            private static void Copy(UnityEngine.Object target, string propertyPath)
             {
-                var property = (SerializedProperty)customData;
-                var value = property.managedReferenceValue;
+                var property = new SerializedObject(target).FindProperty(propertyPath);
+                var value = property?.managedReferenceValue;
                 if (value == null) { return; }
 
                 string json = JsonUtility.ToJson(value);
                 string typeName = value.GetType().AssemblyQualifiedName;
-
-                SessionState.SetString(kCopiedPropertyPathKey, property.propertyPath);
                 SessionState.SetString(kClipboardKey, $"{typeName}|{json}");
             }
 
-            private static (Type type, string json)? ReadClipboard()
+            private static (Type type, string json)? ReadClipboard(bool logWarning = true)
             {
                 var clipboard = SessionState.GetString(kClipboardKey, string.Empty);
                 if (string.IsNullOrEmpty(clipboard)) { return null; }
@@ -192,62 +226,68 @@ namespace GameDevKit.Editor.Attributes
                 var type = Type.GetType(typeName);
                 if (type == null)
                 {
-                    Debug.LogWarning($"Failed to resolve type {typeName} during paste.");
+                    if (logWarning)
+                    {
+                        Debug.LogWarning($"Failed to resolve type {typeName} during paste.");
+                    }
                     return null;
                 }
 
                 return (type, json);
             }
 
-            private static void PasteReplace(object customData)
+            /// <summary>
+            /// Replaces the value on every target with its own instance built from the clipboard.
+            /// </summary>
+            private static void PasteReplace(UnityEngine.Object[] targets, string propertyPath)
             {
-                var property = (SerializedProperty)customData;
                 var clip = ReadClipboard();
                 if (clip == null) { return; }
 
-                // this actually does not work for multi-selected array elements
-                // property.serializedObject.targetObjects only return the currently selected object
-                // foreach (var target in property.serializedObject.targetObjects)
-                // {
-                // }
+                foreach (var target in targets)
+                {
+                    var serializedObject = new SerializedObject(target);
+                    var property = serializedObject.FindProperty(propertyPath);
+                    if (property == null) { continue; }
 
-                var sObj = property.serializedObject;
-                var sProp = sObj.FindProperty(property.propertyPath);
-                if (sProp == null) { return; }
-
-                object newValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
-                Undo.RecordObject(sObj.targetObject, "Paste Property (Replace)");
-                sProp.managedReferenceValue = newValue;
-                sObj.ApplyModifiedProperties();
+                    property.managedReferenceValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
+                    serializedObject.ApplyModifiedProperties();
+                }
             }
 
-            private static void PasteOverwrite(object customData)
+            /// <summary>
+            /// Writes the clipboard fields onto each target's current value when the types match.
+            /// <br/>A null value is replaced by the clipboard instance, a different type logs a warning and is skipped.
+            /// </summary>
+            private static void PasteOverwrite(UnityEngine.Object[] targets, string propertyPath)
             {
-                var property = (SerializedProperty)customData;
                 var clip = ReadClipboard();
                 if (clip == null) { return; }
 
-                var sObj = property.serializedObject;
-                var sProp = sObj.FindProperty(property.propertyPath);
-                if (sProp == null) { return; }
+                foreach (var target in targets)
+                {
+                    var serializedObject = new SerializedObject(target);
+                    var property = serializedObject.FindProperty(propertyPath);
+                    if (property == null) { continue; }
 
-                var currentValue = sProp.managedReferenceValue;
-                if (currentValue == null)
-                {
-                    object newValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
-                    Undo.RecordObject(sObj.targetObject, "Paste Property (Overwrite → Replace)");
-                    sProp.managedReferenceValue = newValue;
+                    var currentValue = property.managedReferenceValue;
+                    if (currentValue == null)
+                    {
+                        property.managedReferenceValue = JsonUtility.FromJson(clip.Value.json, clip.Value.type);
+                    }
+                    else if (currentValue.GetType() == clip.Value.type)
+                    {
+                        var merged = JsonUtility.FromJson(JsonUtility.ToJson(currentValue), clip.Value.type);
+                        JsonUtility.FromJsonOverwrite(clip.Value.json, merged);
+                        property.managedReferenceValue = merged;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Cannot overwrite on '{target.name}': target type {currentValue.GetType().Name} does not match clipboard type {clip.Value.type.Name}.");
+                        continue;
+                    }
+                    serializedObject.ApplyModifiedProperties();
                 }
-                else if (currentValue.GetType() == clip.Value.type)
-                {
-                    Undo.RecordObject(sObj.targetObject, "Paste Property (Overwrite)");
-                    JsonUtility.FromJsonOverwrite(clip.Value.json, currentValue);
-                }
-                else
-                {
-                    Debug.LogWarning($"Cannot overwrite: target type {currentValue.GetType().Name} does not match clipboard type {clip.Value.type.Name}.");
-                }
-                sObj.ApplyModifiedProperties();
             }
 
             #region Duplicate (Deep Copy) implementation
@@ -270,12 +310,9 @@ namespace GameDevKit.Editor.Attributes
                 return true;
             }
 
-            private static string BuildElementPath(string parentPath, int index)
-            {
-                return $"{parentPath}.Array.data[{index}]";
-            }
+            private static string BuildElementPath(string parentPath, int index) => $"{parentPath}.Array.data[{index}]";
 
-            private static void DuplicateArrayElementDeepCopy(UnityEngine.Object target, string parentPath, int srcIndex, string srcElementPath)
+            private static void DuplicateArrayElementDeepCopy(UnityEngine.Object target, string parentPath, int srcIndex)
             {
                 var so = new SerializedObject(target);
                 so.Update();
@@ -287,6 +324,9 @@ namespace GameDevKit.Editor.Attributes
                     return;
                 }
 
+                if (srcIndex >= arrayProp.arraySize) { return; }
+
+                var srcElementPath = BuildElementPath(parentPath, srcIndex);
                 var srcElement = so.FindProperty(srcElementPath);
                 if (srcElement == null || srcElement.propertyType != SerializedPropertyType.ManagedReference)
                 {
@@ -294,14 +334,12 @@ namespace GameDevKit.Editor.Attributes
                     return;
                 }
 
-                Undo.RecordObject(target, "Duplicate Array Element (Deep Copy)");
+                var srcObj = srcElement.managedReferenceValue;
 
                 // Insert a new element at srcIndex + 1 (Unity duplicates reference by default).
                 arrayProp.InsertArrayElementAtIndex(srcIndex);
 
-                // Resolve destination element and replace with a real deep copy.
-                var dstIndex = srcIndex + 1;
-                var dstElementPath = BuildElementPath(parentPath, dstIndex);
+                var dstElementPath = BuildElementPath(parentPath, srcIndex + 1);
                 var dstElement = so.FindProperty(dstElementPath);
                 if (dstElement == null)
                 {
@@ -309,27 +347,20 @@ namespace GameDevKit.Editor.Attributes
                     return;
                 }
 
-                var srcObj = srcElement.managedReferenceValue;
                 if (srcObj != null)
                 {
                     var type = srcObj.GetType();
-                    var json = JsonUtility.ToJson(srcObj);
-                    var clone = JsonUtility.FromJson(json, type);
-                    dstElement.managedReferenceValue = clone;
+                    dstElement.managedReferenceValue = JsonUtility.FromJson(JsonUtility.ToJson(srcObj), type);
                 }
                 else
                 {
-                    // Keep null if source was null
                     dstElement.managedReferenceValue = null;
                 }
 
                 so.ApplyModifiedProperties();
-                EditorUtility.SetDirty(target);
             }
 
             #endregion Duplicate (Deep Copy) implementation
         }
-
     }
-
 }
