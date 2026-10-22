@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using EditorAttributes;
 using UnityEngine;
 using UnityEngine.Pool;
 using Object = UnityEngine.Object;
@@ -32,7 +33,10 @@ namespace GameDevKit.Pool
     [Serializable]
     public class ComponentPool<T> : IComponentPool<T> where T : Component
     {
+        [Required]
         [SerializeField] private T _template;
+
+        [Tooltip("The parent transform under which pooled elements will be instantiated. If null, elements will be instantiated at the root of the template's scene.")]
         [SerializeField] private Transform _container;
 
         [Tooltip("If template is a prefab outside of a scene, will instantiate a scene template from the prefab, then pool from the scene template. This is useful for altering the template in the scene without affecting the prefab.")]
