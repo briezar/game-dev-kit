@@ -85,6 +85,16 @@ public static class ListExtensions
         return false;
     }
 
+    public static T Find<TState, T>(this IReadOnlyList<T> list, TState state, Func<TState, T, bool> match)
+    {
+        if (list.IsNullOrEmpty() || match == null) { return default; }
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (match(state, list[i])) { return list[i]; }
+        }
+        return default;
+    }
+
     public static bool TryFind<T>(this IReadOnlyList<T> list, Func<T, bool> predicate, out T element)
     {
         element = default;
