@@ -122,12 +122,20 @@ namespace GameDevKit
         public static bool HasEnough<T>(this IEnumerable<IntAmount<T>> availableItems, IEnumerable<IntAmount<T>> requirements)
         {
             using var _ = DictionaryPool<T, int>.Get(out var amounts);
-            foreach (var item in availableItems)
+            using var __ = availableItems.GetListBuffer(out var itemBuffer);
+            foreach (var item in itemBuffer)
             {
                 amounts.TryAdd(item.item, 0);
                 amounts[item.item] += item.amount;
             }
-            return requirements.All(ingredient => amounts.TryGetValue(ingredient.item, out var amount) && amount >= ingredient.amount);
+            itemBuffer.Clear();
+            itemBuffer.AddRange(requirements);
+
+            foreach (var ingredient in itemBuffer)
+            {
+                if (!amounts.TryGetValue(ingredient.item, out var amount) || amount < ingredient.amount) { return false; }
+            }
+            return true;
         }
     }
 }
