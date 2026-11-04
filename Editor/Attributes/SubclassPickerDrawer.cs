@@ -91,12 +91,14 @@ namespace GameDevKit.Editor.Attributes
             var propertyPath = property.propertyPath;
             var currentType = property.managedReferenceValue?.GetType();
             var ignoreUnityTypes = attribute is SubclassPickerAttribute { IgnoreUnityTypes: true };
+            var ownerType = attribute is SubclassPickerAttribute { ExcludeOwner: true } ? fieldInfo.DeclaringType : null;
 
             var menu = new GenericMenu();
             menu.AddItem(new GUIContent("None"), currentType == null, () => SetManagedReference(targets, propertyPath, null));
 
             var types = GetDerivedTypes(GetBaseType())
                         .Where(t => !ignoreUnityTypes || !t.Implements<UnityEngine.Object>())
+                        .Where(t => ownerType == null || !ownerType.IsAssignableFrom(t))
                         .ToList();
 
             var duplicateLabels = types.GroupBy(GetTypeLabel)

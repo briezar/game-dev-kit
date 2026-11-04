@@ -10,5 +10,6 @@ namespace GameDevKit.Attributes
     public class SubclassPickerAttribute : PropertyAttribute
     {
         public bool IgnoreUnityTypes = true;
+        public bool ExcludeOwner = true;
     }
 }
