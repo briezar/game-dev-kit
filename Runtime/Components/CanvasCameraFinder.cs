@@ -11,14 +11,7 @@ namespace GameDevKit
         [TagDropdown]
         public string Tag = "MainCamera";
 
-        private void Awake()
-        {
-            _canvas = GetComponent<Canvas>();
-        }
-
-        private void Start()
-        {
-            _canvas.worldCamera = Camera.allCameras.Find(c => c.CompareTag(Tag));
-        }
+        private void Awake() => _canvas = GetComponent<Canvas>();
+        private void Start() => _canvas.worldCamera = Camera.allCameras.Find(c => c.CompareTag(Tag));
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace GameDevKit.Editor
 {
@@ -9,22 +10,7 @@ namespace GameDevKit.Editor
     /// </summary>
     public abstract class SingleLineDrawer : PropertyDrawer
     {
-        private readonly Dictionary<string, SerializedProperty> _cache = new();
-
-        private SerializedProperty GetObjectProperty(SerializedProperty property)
-        {
-            var path = property.propertyPath;
-            if (!_cache.TryGetValue(path, out var cached))
-            {
-                cached = property.FindPropertyRelative(GetObjectName());
-                if (cached == null)
-                {
-                    Debug.LogError($"Could not find property '{GetObjectName()}' in '{property.propertyPath}'.");
-                }
-                _cache[path] = cached;
-            }
-            return cached;
-        }
+        private SerializedProperty GetObjectProperty(SerializedProperty property) => property.FindPropertyRelative(GetObjectName());
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -32,6 +18,14 @@ namespace GameDevKit.Editor
             var objectProperty = GetObjectProperty(property);
             EditorGUI.PropertyField(position, objectProperty, label);
             EditorGUI.EndProperty();
+        }
+
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var field = new PropertyField(GetObjectProperty(property));
+            var labelText = property.displayName;
+            field.RegisterCallbackOnce<GeometryChangedEvent>(_ => field.Q<Label>().text = labelText);
+            return field;
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => EditorGUI.GetPropertyHeight(GetObjectProperty(property), label, true);

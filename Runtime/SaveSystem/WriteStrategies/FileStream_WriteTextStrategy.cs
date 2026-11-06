@@ -1,30 +1,27 @@
-using System;
 using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 
 namespace GameDevKit.DataPersistence
 {
     public class FileStream_WriteTextStrategy : WriteStrategy
     {
         public readonly int BufferSize;
-        public readonly bool UseAsync;
+
+        /// <summary> Force the data onto the disk before returning, so a power loss right after a save cannot leave an empty file. </summary>
+        public readonly bool FlushToDisk;
 
         public const int DefaultBufferSize = 8192; // 8 KB
 
-        public FileStream_WriteTextStrategy(int bufferSize = DefaultBufferSize, bool useAsync = true)
+        public FileStream_WriteTextStrategy(int bufferSize = DefaultBufferSize, bool flushToDisk = true)
         {
             BufferSize = bufferSize;
-            UseAsync = useAsync;
+            FlushToDisk = flushToDisk;
         }
 
-        public override async UniTask Write(string path, string content, CancellationToken cancellationToken = default)
+        public override void Write(string path, byte[] buffer, int length)
         {
-            var bytes = Encoding.UTF8.GetBytes(content);
-            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize, UseAsync);
-            await stream.WriteAsync(bytes, cancellationToken);
+            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize);
+            stream.Write(buffer, 0, length);
+            if (FlushToDisk) { stream.Flush(true); }
         }
     }
 }

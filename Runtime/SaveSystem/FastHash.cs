@@ -6,21 +6,21 @@ namespace GameDevKit
         private const uint FnvPrime = 16777619;
         private const uint FnvOffset = 2166136261;
 
+        /// <summary> FNV-1a over UTF-16 code units. Returns 0 for null or empty text. Detects accidental corruption, not tampering. </summary>
         public static uint Compute(string text)
         {
-            if (string.IsNullOrEmpty(text))
-                return 0;
+            if (string.IsNullOrEmpty(text)) { return 0; }
 
-            uint hash = FnvOffset;
-
-            // FNV-1a byte-wise hash
-            for (int i = 0; i < text.Length; i++)
+            unchecked
             {
-                hash ^= text[i];      // XOR with char (UTF-16 code unit)
-                hash *= FnvPrime;     // multiply by prime
+                var hash = FnvOffset;
+                for (var i = 0; i < text.Length; i++)
+                {
+                    hash ^= text[i];   // XOR with char (UTF-16 code unit)
+                    hash *= FnvPrime;  // multiply by prime
+                }
+                return hash;
             }
-
-            return hash;
         }
     }
 }

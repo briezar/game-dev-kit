@@ -7,10 +7,7 @@ namespace GameDevKit.DataPersistence
     {
         private readonly JsonSerializerSettings _serializerSettings;
 
-        public NewtonsoftSerializationStrategy(JsonSerializerSettings serializerSettings = null)
-        {
-            _serializerSettings = serializerSettings;
-        }
+        public NewtonsoftSerializationStrategy(JsonSerializerSettings serializerSettings = null) => _serializerSettings = serializerSettings;
 
         public override string Serialize(object value) => JsonConvert.SerializeObject(value, _serializerSettings);
         public override T Deserialize<T>(string value)
