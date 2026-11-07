@@ -24,7 +24,7 @@ namespace GameDevKit.Editor
         {
             var field = new PropertyField(GetObjectProperty(property));
             var labelText = property.displayName;
-            field.RegisterCallbackOnce<GeometryChangedEvent>(_ => field.Q<Label>().text = labelText);
+            field.RegisterCallbackOnce<GeometryChangedEvent>(_ => field.Q<Label>(className: BaseField<string>.labelUssClassName).text = labelText);
             return field;
         }
 

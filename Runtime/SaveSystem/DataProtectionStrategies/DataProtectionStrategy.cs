@@ -33,7 +33,7 @@ namespace GameDevKit.DataPersistence
         /// <summary> Keep the previous save as a backup when a new one replaces it, and use it for recovery. </summary>
         public bool UseBackup { get; init; } = true;
 
-        /// <summary> Skip the hash check when loading. </summary>
+        /// <summary> Skips the hash check and accepts plain files without a header, so saves can be edited by hand. </summary>
         public bool AllowTampering { get; init; } = false;
         public Func<string, uint> FnComputeHash { get; init; } = FastHash.Compute;
 
@@ -42,7 +42,10 @@ namespace GameDevKit.DataPersistence
 
         public uint ComputeHash(string payload) => FnComputeHash(payload);
 
-        /// <summary> Splits file text into header and payload and checks the hash. The payload is null if the header is invalid. </summary>
+        /// <summary>
+        /// Splits file text into header and payload and checks the hash.
+        /// <br/>The payload is null if the header is invalid, unless <see cref="AllowTampering"/> is true.
+        /// </summary>
         public VerifyStatus Unwrap(string fileText, out string payload)
         {
             payload = null;
@@ -50,7 +53,10 @@ namespace GameDevKit.DataPersistence
                 || fileText[HashHexLength] != '\n'
                 || !uint.TryParse(fileText.AsSpan(0, HashHexLength), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var expected))
             {
-                return VerifyStatus.InvalidHeader;
+                if (!AllowTampering) { return VerifyStatus.InvalidHeader; }
+
+                payload = fileText; // accept a plain file without a header
+                return VerifyStatus.Valid;
             }
 
             payload = fileText.Substring(HeaderLength);
