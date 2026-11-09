@@ -8,7 +8,7 @@ namespace GameDevKit
     public class CameraTagRef
     {
         [TagDropdown]
-        [SerializeField] private string _tag = "MainCamera";
+        [SerializeField] private string _tag = CameraUtils.MainCameraTag;
 
         public string Tag
         {
@@ -20,7 +20,7 @@ namespace GameDevKit
             }
         }
 
-        public Camera Camera => _camera != null ? _camera : (_camera = Camera.allCameras.Find(c => c.CompareTag(Tag)));
+        public Camera Camera => _camera != null ? _camera : (_camera = CameraUtils.FindCameraByTag(Tag));
 
         private Camera _camera;
 

@@ -16,7 +16,7 @@ namespace GameDevKit
         public Camera TargetCamera;
 
         [TagDropdown]
-        public string Tag = "MainCamera";
+        public string Tag = CameraUtils.MainCameraTag;
 
         public FacingMode Mode = FacingMode.Billboard;
         public Vector3 Offset;
@@ -29,7 +29,7 @@ namespace GameDevKit
 
         protected override void OnStartOrEnable()
         {
-            if (TargetCamera == null) { TargetCamera = Camera.allCameras.Find(c => c.CompareTag(Tag)); }
+            if (TargetCamera == null) { TargetCamera = CameraUtils.FindCameraByTag(Tag); }
             if (FaceOnEnable) { FaceCamera(); }
         }
 
