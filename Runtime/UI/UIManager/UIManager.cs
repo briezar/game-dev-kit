@@ -32,7 +32,13 @@ namespace GameDevKit.UI
         public static void SetInteractable(bool interactable, bool force = false) => _impl.SetInteractable(interactable, force);
         public static UniTask FadeTransition(FadeSetting fadeSetting) => _impl.FadeTransition(fadeSetting);
         public static T GetUI<T>() where T : UIView, new() => _impl.PreloadUI<T>();
-        public static T PreloadUI<T>() where T : UIView, new() => _impl.PreloadUI<T>();
+        public static T PreloadUI<T>() where T : UIView, new()
+        {
+            var ui = _impl.PreloadUI<T>();
+            ui.gameObject.SetActive(false);
+            return ui;
+        }
+
         public static bool IsShowing<T>() => _impl.CurrentView is T;
         public static UniTask ShowUI(UIView view) => _impl.ShowUI(view);
         public static T ShowUI<T>() where T : UIView, new() => _impl.ShowUI<T>();

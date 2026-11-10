@@ -20,5 +20,17 @@ public static class InputExtensions
             inputAction.Disable();
         }
     }
+
+    public static void Enable(this InputActionAsset inputActionAsset, bool enable)
+    {
+        if (enable)
+        {
+            inputActionAsset.Enable();
+        }
+        else
+        {
+            inputActionAsset.Disable();
+        }
+    }
 #endif
 }
