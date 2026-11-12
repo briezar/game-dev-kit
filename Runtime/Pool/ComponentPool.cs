@@ -66,7 +66,7 @@ namespace GameDevKit.Pool
                 if (_sceneTemplate != null) { return _sceneTemplate; }
 
                 _sceneTemplate = _template.IsPrefab() ? Object.Instantiate(_template, Container) : _template;
-                HideSceneTemplate();
+                _sceneTemplate.gameObject.SetActive(false);
                 return _sceneTemplate;
             }
         }
@@ -104,8 +104,15 @@ namespace GameDevKit.Pool
 
         private void HideSceneTemplate()
         {
-            if (_sceneTemplate == null) { return; }
-            _sceneTemplate.gameObject.SetActive(false);
+            if (EnsureSceneTemplate)
+            {
+                _ = Template; // forces creation + hide on first call
+            }
+            else if (_template != null && !_template.IsPrefab())
+            {
+                // Optional: also hide a plain scene template when not using a scene copy
+                _template.gameObject.SetActive(false);
+            }
         }
 
         public void ReplaceTemplate(T newTemplate)
