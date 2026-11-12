@@ -35,6 +35,7 @@ namespace GameDevKit.UI
         public class FadeInScaleUp : Instruction
         {
             public float ScaleFactor = 1.5f;
+            public Ease Ease = Ease.OutBack;
 
             public Vector3 OriginalScale { get; private set; }
 
@@ -47,7 +48,7 @@ namespace GameDevKit.UI
                 canvasGroup.alpha = 0;
                 var sequence = Sequence.Create(useUnscaledTime: true)
                 .Chain(Tween.Alpha(canvasGroup, 0, 1, Duration * 0.5f))
-                .Group(Tween.Scale(transform, OriginalScale * ScaleFactor, OriginalScale, Duration, Ease.OutBack));
+                .Group(Tween.Scale(transform, OriginalScale * ScaleFactor, OriginalScale, Duration, Ease));
 
                 await sequence;
             }
@@ -57,6 +58,7 @@ namespace GameDevKit.UI
         public class FadeOutScaleUp : Instruction
         {
             public float ScaleFactor = 1.25f;
+            public Ease Ease = Ease.OutBack;
 
             public Vector3 OriginalScale { get; private set; }
 
@@ -69,7 +71,7 @@ namespace GameDevKit.UI
                 canvasGroup.alpha = 0;
                 var sequence = Sequence.Create(useUnscaledTime: true)
                 .Chain(Tween.Alpha(canvasGroup, 1, 0, Duration * 0.95f))
-                .Group(Tween.Scale(transform, OriginalScale, OriginalScale * ScaleFactor, Duration));
+                .Group(Tween.Scale(transform, OriginalScale, OriginalScale * ScaleFactor, Duration, Ease)); 
 
                 await sequence;
             }
@@ -129,6 +131,7 @@ namespace GameDevKit.UI
         {
             public SlideDirection Direction = SlideDirection.LeftToRight;
             public bool FadeIn = true;
+            public Ease Ease = Ease.OutBack;
 
             public override async UniTask Play()
             {
@@ -139,13 +142,14 @@ namespace GameDevKit.UI
                 if (Direction is not SlideDirection.None)
                 {
                     var xOffset = _totalOffsetX * (Direction is SlideDirection.LeftToRight ? -1 : 1);
-                    sequence.Chain(Tween.UIAnchoredPositionX(rectTransform, OriginalAnchoredPos.x + xOffset, OriginalAnchoredPos.x, Duration));
+                    sequence.Chain(Tween.UIAnchoredPositionX(rectTransform, OriginalAnchoredPos.x + xOffset, OriginalAnchoredPos.x, Duration, Ease));
                 }
 
                 if (FadeIn)
                 {
                     sequence.Group(Tween.Alpha(canvasGroup, 0, 1, Duration, useUnscaledTime: true));
                 }
+                await sequence;
             }
         }
 
@@ -154,6 +158,7 @@ namespace GameDevKit.UI
         {
             public SlideDirection Direction = SlideDirection.LeftToRight;
             public bool FadeOut = true;
+            public Ease Ease = Ease.InBack;
 
             public override async UniTask Play()
             {
@@ -164,13 +169,14 @@ namespace GameDevKit.UI
                 if (Direction is not SlideDirection.None)
                 {
                     var xOffset = _totalOffsetX * (Direction is SlideDirection.LeftToRight ? 1 : -1);
-                    sequence.Chain(Tween.UIAnchoredPositionX(rectTransform, OriginalAnchoredPos.x, OriginalAnchoredPos.x + xOffset, Duration, Ease.InQuad));
+                    sequence.Chain(Tween.UIAnchoredPositionX(rectTransform, OriginalAnchoredPos.x, OriginalAnchoredPos.x + xOffset, Duration, Ease));
                 }
 
                 if (FadeOut)
                 {
                     sequence.Group(Tween.Alpha(canvasGroup, 1, 0, Duration, useUnscaledTime: true));
                 }
+                await sequence;
             }
         }
 

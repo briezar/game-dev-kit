@@ -19,6 +19,7 @@ namespace GameDevKit.UI
 
         public UniTask PlayAsync(int index) => PlayInternal(Instructions[index]);
         public UniTask PlayAsync<T>() where T : Instruction, new() => PlayInternal(GetInstruction<T>());
+        public UniTask PlayAsync(Instruction instruction) => PlayInternal(instruction);
 
         public T GetInstruction<T>() where T : Instruction, new()
         {

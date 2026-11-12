@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace GameDevKit.UI
@@ -20,7 +17,7 @@ namespace GameDevKit.UI
 
         public Action OnClose;
 
-        public virtual void Click_Close()
+        public virtual void Close()
         {
             UIManager.HideUI(this);
             OnClose?.Invoke();
