@@ -1,27 +1,32 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 namespace GameDevKit
 {
-    public abstract class ObservableNumber<T> where T : unmanaged
+    public delegate ref T RefGetter<T>();
+
+    public abstract class ObservableNumber<T, TInfo> where T : unmanaged
     {
-        [SerializeField] protected T _value;
+        public readonly SourcedAction<TInfo> OnValueChanged = new();
 
-        public T Value => _value;
+        protected abstract ref T ValueRef { get; }
+        protected abstract bool AreEqual(T a, T b);
+        protected abstract T Sum(T a, T b);
+        protected abstract TInfo CreateInfo(T prev, T next);
 
-#if UNITY_EDITOR
-        internal static class EditorProps
+        public T Value
         {
-            public static string ValueProp => nameof(_value);
+            get => ValueRef;
+            set => Set(value);
         }
-#endif
 
-        public abstract void Set(T value);
-        public virtual void SetWithoutNotify(T value) => _value = value;
+        public void Set(T value)
+        {
+            var prev = ValueRef;
+            if (AreEqual(value, prev)) { return; }
 
-        public abstract void Add(T amount);
+            ValueRef = value;
+            OnValueChanged.Invoke(CreateInfo(prev, value));
+        }
 
+        public void SetWithoutNotify(T value) => ValueRef = value;
+        public void Add(T amount) => Set(Sum(Value, amount));
     }
 }

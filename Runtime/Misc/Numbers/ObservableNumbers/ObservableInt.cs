@@ -1,28 +1,37 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameDevKit
 {
-    [Serializable]
-    public class ObservableInt : ObservableNumber<int>
+    public abstract class ObservableIntBase : ObservableNumber<int, IntChangeInfo>
     {
-        public readonly SourcedAction<IntChangeInfo> OnValueChanged = new();
+        protected override bool AreEqual(int a, int b) => a == b;
+        protected override int Sum(int a, int b) => a + b;
+        protected override IntChangeInfo CreateInfo(int prev, int next) => new(prev, next);
 
-        public override void Set(int value)
+        public static implicit operator int(ObservableIntBase o) => o.Value;
+    }
+
+    [Serializable]
+    public class ObservableInt : ObservableIntBase
+    {
+        [SerializeField] private int _value;
+
+        protected override ref int ValueRef => ref _value;
+
+        internal static class EditorProps
         {
-            var prev = _value;
-            if (value == prev) { return; }
-
-            _value = value;
-            OnValueChanged?.Invoke(new(prev, value));
+            public const string ValueProp = nameof(_value);
         }
 
-        public override void Add(int amount) => Set(Value + amount);
-
         public static explicit operator ObservableInt(int value) => new() { _value = value };
-        public static implicit operator int(ObservableInt value) => value.Value;
+    }
 
+    public class ObservableIntRef : ObservableIntBase
+    {
+        private readonly RefGetter<int> _getter;
+        protected override ref int ValueRef => ref _getter();
+
+        public ObservableIntRef(RefGetter<int> getter) => _getter = getter;
     }
 }

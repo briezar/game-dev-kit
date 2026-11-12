@@ -1,28 +1,37 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameDevKit
 {
-    [Serializable]
-    public class ObservableFloat : ObservableNumber<float>
+    public abstract class ObservableFloatBase : ObservableNumber<float, FloatChangeInfo>
     {
-        public readonly SourcedAction<FloatChangeInfo> OnValueChanged = new();
+        protected override bool AreEqual(float a, float b) => Mathf.Approximately(a, b);
+        protected override float Sum(float a, float b) => a + b;
+        protected override FloatChangeInfo CreateInfo(float prev, float next) => new(prev, next);
 
-        public override void Set(float value)
+        public static implicit operator float(ObservableFloatBase o) => o.Value;
+    }
+
+    [Serializable]
+    public class ObservableFloat : ObservableFloatBase
+    {
+        [SerializeField] private float _value;
+
+        internal static class EditorProps
         {
-            var prev = _value;
-            if (Mathf.Approximately(value, prev)) { return; }
-
-            _value = value;
-            OnValueChanged?.Invoke(new(prev, value));
+            public const string ValueProp = nameof(_value);
         }
 
-        public override void Add(float amount) => Set(Value + amount);
+        protected override ref float ValueRef => ref _value;
 
         public static explicit operator ObservableFloat(float value) => new() { _value = value };
-        public static implicit operator float(ObservableFloat value) => value.Value;
+    }
 
+    public class ObservableFloatRef : ObservableFloatBase
+    {
+        private readonly RefGetter<float> _getter;
+        protected override ref float ValueRef => ref _getter();
+
+        public ObservableFloatRef(RefGetter<float> getter) => _getter = getter;
     }
 }

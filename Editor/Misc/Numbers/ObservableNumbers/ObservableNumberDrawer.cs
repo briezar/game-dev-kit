@@ -2,10 +2,15 @@ using UnityEditor;
 
 namespace GameDevKit.Editor
 {
-    [CustomPropertyDrawer(typeof(ObservableNumber<>), true)]
-    public class ObservableNumberDrawer : SingleLineDrawer
+    [CustomPropertyDrawer(typeof(ObservableInt))]
+    public class ObservableIntDrawer : SingleLineDrawer
     {
-        protected override string GetObjectName() => ObservableNumber<int>.EditorProps.ValueProp;
+        protected override string GetObjectName() => ObservableInt.EditorProps.ValueProp;
     }
 
+    [CustomPropertyDrawer(typeof(ObservableFloat))]
+    public class ObservableFloatDrawer : SingleLineDrawer
+    {
+        protected override string GetObjectName() => ObservableFloat.EditorProps.ValueProp;
+    }
 }
