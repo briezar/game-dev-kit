@@ -25,7 +25,7 @@ namespace GameDevKit.UI
         {
             if (fadeSetting.FadeInDuration != null)
             {
-                await FadeScreen(1, fadeSetting.FadeInDuration.Value);
+                await FadeScreen(0, 1, fadeSetting.FadeInDuration.Value);
                 fadeSetting.OnFadeInComplete?.Invoke();
             }
 
@@ -39,16 +39,16 @@ namespace GameDevKit.UI
             if (fadeSetting.FadeOutDuration != null)
             {
                 fadeSetting.OnFadeOutStart?.Invoke();
-                await FadeScreen(0, fadeSetting.FadeOutDuration.Value);
+                await FadeScreen(1, 0, fadeSetting.FadeOutDuration.Value);
             }
 
             fadeSetting.OnFinish?.Invoke();
         }
 
-        public Tween FadeScreen(float normalizedValue, float duration = 0)
+        public Tween FadeScreen(float from, float to, float duration = 0)
         {
             gameObject.SetActive(true);
-            var tween = Tween.Alpha(canvasGroup, normalizedValue, duration).OnComplete(() => gameObject.SetActive(normalizedValue > 0));
+            var tween = Tween.Alpha(canvasGroup, from, to, duration).OnComplete(() => gameObject.SetActive(to > 0));
             return tween;
         }
     }

@@ -157,4 +157,49 @@ public static class RectTransformExtensions
         var randomPoint = rectTransform.rect.GetRandomPosition();
         return rectTransform.TransformPoint(randomPoint);
     }
+
+    public static void ClampInScreen(this RectTransform rectTransform, float offset = 0, Camera camera = null)
+    {
+        camera ??= Camera.main;
+
+        var safeArea = Screen.safeArea;
+        var minPos = camera.ScreenToWorldPoint(safeArea.min);
+        var maxPos = camera.ScreenToWorldPoint(safeArea.max);
+
+        var corners = ArrayPool<Vector3>.Shared.Rent(4);
+        rectTransform.GetWorldCorners(corners);
+
+        var minCorner = corners[0];
+        var maxCorner = corners[2];
+
+        ArrayPool<Vector3>.Shared.Return(corners);
+
+        float xOffset = 0;
+        float yOffset = 0;
+
+        if (minCorner.x < minPos.x)
+        {
+            xOffset = minPos.x - minCorner.x;
+        }
+        else if (maxCorner.x > maxPos.x)
+        {
+            xOffset = maxPos.x - maxCorner.x;
+        }
+
+        xOffset += offset * Mathf.Sign(xOffset);
+
+        if (minCorner.y < minPos.y)
+        {
+            yOffset = minPos.y - minCorner.y;
+        }
+        else if (maxCorner.y > maxPos.y)
+        {
+            yOffset = maxPos.y - maxCorner.y;
+        }
+
+        yOffset += offset * Mathf.Sign(yOffset);
+
+        rectTransform.position += new Vector3(xOffset, yOffset);
+    }
+
 }

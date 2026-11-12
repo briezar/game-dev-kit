@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using GameDevKit.EventProxies;
@@ -206,113 +205,6 @@ public static class UnityObjectExtensions
 
     public static RectTransform GetRectTransform(this Component component) => (RectTransform)component.transform;
     public static RectTransform GetRectTransform(this GameObject gameObject) => (RectTransform)gameObject.transform;
-
-    public static int DestroyAllChildren(this Transform parent, Func<Transform, bool> condition = null)
-    {
-        var destroyCount = 0;
-        for (int i = parent.childCount - 1; i >= 0; i--)
-        {
-            var child = parent.GetChild(i);
-            if (condition == null || condition(child))
-            {
-                child.DestroyGameObject();
-                destroyCount++;
-            }
-        }
-
-        return destroyCount;
-    }
-
-    public static int DestroyAllChildrenImmediate(this Transform parent, Func<Transform, bool> condition = null)
-    {
-        var destroyCount = 0;
-        for (int i = parent.childCount - 1; i >= 0; i--)
-        {
-            var child = parent.GetChild(i);
-            if (condition == null || condition(child))
-            {
-                child.DestroyGameObjectImmediate();
-                destroyCount++;
-            }
-        }
-        return destroyCount;
-    }
-
-    public static IEnumerable<Transform> EnumerateChildren(this Transform parent, Func<Transform, bool> condition = null)
-    {
-        var count = parent.childCount;
-        for (int i = 0; i < count; i++)
-        {
-            var child = parent.GetChild(i);
-            if (condition == null || condition(child)) { yield return child; }
-        }
-    }
-
-    public static IEnumerable<Transform> ReverseEnumerateChildren(this Transform parent, Func<Transform, bool> condition = null)
-    {
-        var count = parent.childCount;
-        for (int i = count - 1; i >= 0; i--)
-        {
-            var child = parent.GetChild(i);
-            if (condition == null || condition(child)) { yield return child; }
-        }
-    }
-
-    public static int GetChildCount(this Transform parent, Func<Transform, bool> condition)
-    {
-        var count = 0;
-        var childCount = parent.childCount;
-        for (int i = 0; i < childCount; i++)
-        {
-            var child = parent.GetChild(i);
-            if (condition == null || condition(child)) { count++; }
-        }
-        return count;
-    }
-
-    public static void ClampInScreen(this RectTransform rectTransform, float offset = 0, Camera camera = null)
-    {
-        camera ??= Camera.main;
-
-        var safeArea = Screen.safeArea;
-        var minPos = camera.ScreenToWorldPoint(safeArea.min);
-        var maxPos = camera.ScreenToWorldPoint(safeArea.max);
-
-        var corners = ArrayPool<Vector3>.Shared.Rent(4);
-        rectTransform.GetWorldCorners(corners);
-
-        var minCorner = corners[0];
-        var maxCorner = corners[2];
-
-        ArrayPool<Vector3>.Shared.Return(corners);
-
-        float xOffset = 0;
-        float yOffset = 0;
-
-        if (minCorner.x < minPos.x)
-        {
-            xOffset = minPos.x - minCorner.x;
-        }
-        else if (maxCorner.x > maxPos.x)
-        {
-            xOffset = maxPos.x - maxCorner.x;
-        }
-
-        xOffset += offset * Mathf.Sign(xOffset);
-
-        if (minCorner.y < minPos.y)
-        {
-            yOffset = minPos.y - minCorner.y;
-        }
-        else if (maxCorner.y > maxPos.y)
-        {
-            yOffset = maxPos.y - maxCorner.y;
-        }
-
-        yOffset += offset * Mathf.Sign(yOffset);
-
-        rectTransform.position += new Vector3(xOffset, yOffset);
-    }
 
     public static void Stop(this Coroutine coroutine, MonoBehaviour runner)
     {
